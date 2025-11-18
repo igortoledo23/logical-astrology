@@ -24,5 +24,7 @@ public class HoroscopoConsolidado {
 
     private String sentimentoPredominante;
 
+    private Double coherenceScore;
+
     private LocalDateTime dataAnalise;
 }
