@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class AnaliseLogicaService {
@@ -67,23 +66,83 @@ public class AnaliseLogicaService {
         String displaySign = normalizedSigno.substring(0, 1).toUpperCase(Locale.ROOT)
                 + normalizedSigno.substring(1).toLowerCase(Locale.ROOT);
 
+        List<String> destaques = result.highlights() == null ? List.of() : result.highlights().stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+        List<String> fontesAnalisadas = fontes.stream()
+                .map(Horoscopo::getFonte)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .toList();
+
+        String sentimento = result.sentiment() == null ? "Neutro" : result.sentiment();
+        String sentimentoNarrativo = switch (sentimento.toLowerCase(Locale.ROOT)) {
+            case "positivo" -> "um clima otimista";
+            case "negativo" -> "um alerta mais cauteloso";
+            default -> "uma energia equilibrada";
+        };
+
         StringBuilder builder = new StringBuilder();
         builder.append("Consolidação lógica para ")
                 .append(displaySign)
-                .append(": ");
-        builder.append(result.summary());
-        if (!result.highlights().isEmpty()) {
-            builder.append(" Temas recorrentes: ")
-                    .append(String.join(", ", result.highlights()))
-                    .append('.');
+                .append('.');
+
+        if (!fontesAnalisadas.isEmpty()) {
+            builder.append(' ')
+                    .append("Cruzamos as mensagens de ")
+                    .append(humanizeList(fontesAnalisadas))
+                    .append(", procurando apenas o que aparece em mais de um texto.");
+        } else {
+            builder.append(' ')
+                    .append("Cruzamos as previsões disponíveis e destacamos somente os trechos repetidos entre elas.");
         }
+
         builder.append(' ')
-                .append("Sentimento predominante: ")
-                .append(result.sentiment().toLowerCase(Locale.ROOT))
-                .append(". Coerência estimada: ")
-                .append(String.format(Locale.US, "%.2f", result.coherenceScore()));
-        builder.append(". Fontes analisadas: ")
-                .append(fontes.stream().map(Horoscopo::getFonte).filter(Objects::nonNull).distinct().collect(Collectors.joining(", ")));
+                .append("Quando duas ou mais fontes insistem em um assunto, ele vira a linha-guia da análise.");
+
+        if (!destaques.isEmpty()) {
+            builder.append(' ')
+                    .append("Nesta coleta, os temas que se repetem são ")
+                    .append(humanizeList(destaques))
+                    .append(", formando o núcleo lógico do dia.");
+        }
+
+        builder.append(' ')
+                .append("Resumo do cruzamento: ")
+                .append(result.summary());
+
+        builder.append(' ')
+                .append("O sentimento predominante é ")
+                .append(sentimento.toLowerCase(Locale.ROOT))
+                .append(", traduzindo ")
+                .append(sentimentoNarrativo)
+                .append(',')
+                .append(' ')
+                .append("com coerência calculada em ")
+                .append(String.format(Locale.US, "%.2f", result.coherenceScore()))
+                .append(',')
+                .append(' ')
+                .append("o que indica que as fontes concordam nesse nível de intensidade.");
+
         return builder.toString().trim();
+    }
+
+    private String humanizeList(List<String> itens) {
+        if (itens == null || itens.isEmpty()) {
+            return "";
+        }
+        if (itens.size() == 1) {
+            return itens.get(0);
+        }
+        if (itens.size() == 2) {
+            return itens.get(0) + " e " + itens.get(1);
+        }
+        return String.join(", ", itens.subList(0, itens.size() - 1))
+                + " e "
+                + itens.get(itens.size() - 1);
     }
 }
