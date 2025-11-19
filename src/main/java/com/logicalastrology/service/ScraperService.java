@@ -21,6 +21,8 @@ public class ScraperService {
             "https://joaobidu.com.br/horoscopo-do-dia/horoscopo-do-dia-para-%s/";
     private static final String HOROSCOPO_VIRTUAL_TEMPLATE =
             "https://www.horoscopovirtual.com.br/horoscopo/%s";
+    private static final String PERSONARE_TEMPLATE =
+            "https://www.personare.com.br/horoscopo-do-dia/%s";
 
     private static final List<SignoConfig> SIGNOS = List.of(
             new SignoConfig("aries"),
@@ -66,6 +68,7 @@ public class ScraperService {
         List<Horoscopo> coletados = new ArrayList<>();
         scrapeJoaoBidu(signo).ifPresent(coletados::add);
         scrapeHoroscopoVirtual(signo).ifPresent(coletados::add);
+        scrapePersonare(signo).ifPresent(coletados::add);
         return coletados;
     }
 
@@ -99,6 +102,21 @@ public class ScraperService {
         }
     }
 
+    private Optional<Horoscopo> scrapePersonare(SignoConfig signo) {
+        String url = String.format(PERSONARE_TEMPLATE, signo.personareSlug());
+        try {
+            Document doc = Jsoup.connect(url).userAgent(USER_AGENT).get();
+            String texto = doc.select("div.sc-6d2a5120-5.fgTbnr p").text();
+            if (texto.isBlank()) {
+                texto = doc.select("div.sc-6d2a5120-5.fgTbnr").text();
+            }
+            return buildHoroscopo(signo.nome(), "Personare", texto);
+        } catch (Exception e) {
+            log.warn("Falha ao coletar Personare para {}: {}", signo.nome(), e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private Optional<Horoscopo> buildHoroscopo(String signo, String fonte, String descricao) {
         if (descricao == null || descricao.isBlank()) {
             return Optional.empty();
@@ -111,9 +129,9 @@ public class ScraperService {
                 .build());
     }
 
-    private record SignoConfig(String nome, String joaoBiduSlug, String horoscopoVirtualSlug) {
+    private record SignoConfig(String nome, String joaoBiduSlug, String horoscopoVirtualSlug, String personareSlug) {
         private SignoConfig(String nome) {
-            this(nome, nome, nome);
+            this(nome, nome, nome, nome);
         }
     }
 }
