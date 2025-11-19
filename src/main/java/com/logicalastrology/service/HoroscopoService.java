@@ -4,7 +4,6 @@ import com.logicalastrology.dto.HoroscopoDTO;
 import com.logicalastrology.model.Horoscopo;
 import com.logicalastrology.repository.HoroscopoRepository;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +18,7 @@ public class HoroscopoService {
     }
 
     public List<HoroscopoDTO> findBySign(String sign) {
-        List<Horoscopo> list = repository.findBySigno(sign);
+        List<Horoscopo> list = repository.findBySignoIgnoreCase(sign);
         return list.stream().map(h -> HoroscopoDTO.builder()
                 .sign(h.getSigno())
                 .source(h.getFonte())
