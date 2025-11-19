@@ -38,7 +38,7 @@ public class AnaliseSignoService {
 
         Optional<SignoAnalise> existenteHoje = signoAnaliseRepository
                 .findTopBySignoIgnoreCaseAndDataAnaliseOrderByCriadoEmDesc(normalized, hoje);
-        if (existenteHoje.isPresent()) {
+        if (existenteHoje.isPresent() && existenteHoje.get().isGenerated()) {
             return toDto(existenteHoje.get());
         }
 
@@ -62,6 +62,7 @@ public class AnaliseSignoService {
         String resumo = resultado.summary() == null ? "" : resultado.summary();
         String sentimento = resultado.sentiment() == null ? "Indefinido" : resultado.sentiment();
         double coerencia = resultado.coherenceScore();
+        boolean gerado = resultado.generated();
         List<String> destaques = resultado.highlights() == null
                 ? Collections.emptyList()
                 : new ArrayList<>(resultado.highlights());
@@ -73,6 +74,7 @@ public class AnaliseSignoService {
                 .sentimento(sentimento)
                 .coerencia(coerencia)
                 .destaques(destaques)
+                .generated(gerado)
                 .build();
 
         return signoAnaliseRepository.save(entidade);

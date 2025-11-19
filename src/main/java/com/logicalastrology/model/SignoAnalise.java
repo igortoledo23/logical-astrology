@@ -37,6 +37,9 @@ public class SignoAnalise {
     @Column(nullable = false)
     private double coerencia;
 
+    @Column(nullable = false)
+    private boolean generated;
+
     @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "tb_signo_analise_highlight", joinColumns = @JoinColumn(name = "analise_id"))
