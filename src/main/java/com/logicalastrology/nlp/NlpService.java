@@ -106,9 +106,10 @@ public class NlpService {
 
     private String buildPrompt(String signo, List<String> textos) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Analise as previsões para o signo de ")
+        sb.append("Junte estes textos para o signo de ")
                 .append(signo)
-                .append(". Produza um JSON com o seguinte formato: {\"summary\": string, \"sentiment\": string (Positivo, Neutro ou Negativo), \"coherence\": number entre 0 e 1, \"highlights\": [string,...]}.\n\n");
+                .append(". Junte estes dois textos e faça um resumo dos dois transformando em um só, destacando os pontos em que os dois textos deram mais evidência. Utilize linguagem humanizada e palavras fáceis. O resumo final deve estar pronto para ser exibido ao usuário e ficará no campo descricaoFinal.\n\n")
+                .append("Retorne somente um JSON com o formato: {\"summary\": string, \"sentiment\": string (Positivo, Neutro ou Negativo), \"coherence\": number entre 0 e 1, \"highlights\": [string,...]}. O campo summary deve conter exatamente o texto humanizado pedido acima.\n\n");
         for (int i = 0; i < textos.size(); i++) {
             sb.append("Fonte ").append(i + 1).append(": ").append(textos.get(i)).append("\n\n");
         }

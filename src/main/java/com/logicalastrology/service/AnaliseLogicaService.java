@@ -45,7 +45,7 @@ public class AnaliseLogicaService {
                 .toList();
 
         AiAnalysisResult result = nlpService.analyze(signo, textos);
-        String descricaoFinal = montarDescricao(signo, result, horoscopos);
+        String descricaoFinal = extrairDescricaoFinal(signo, result, horoscopos);
 
         HoroscopoConsolidado consolidado = HoroscopoConsolidado.builder()
                 .signo(signo.toLowerCase(Locale.ROOT))
@@ -58,7 +58,15 @@ public class AnaliseLogicaService {
         return consolidadoRepository.save(consolidado);
     }
 
-    private String montarDescricao(String signo, AiAnalysisResult result, List<Horoscopo> fontes) {
+    private String extrairDescricaoFinal(String signo, AiAnalysisResult result, List<Horoscopo> fontes) {
+        if (result.summary() != null && !result.summary().isBlank()) {
+            return result.summary().trim();
+        }
+
+        return montarDescricaoFallback(signo, result, fontes);
+    }
+
+    private String montarDescricaoFallback(String signo, AiAnalysisResult result, List<Horoscopo> fontes) {
         String normalizedSigno = signo == null ? "" : signo.trim();
         if (normalizedSigno.isEmpty()) {
             normalizedSigno = "signo";
@@ -111,9 +119,13 @@ public class AnaliseLogicaService {
                     .append(", formando o núcleo lógico do dia.");
         }
 
+        String resumo = result.summary();
+        if (resumo == null || resumo.isBlank()) {
+            resumo = "Sem resumo disponível.";
+        }
         builder.append(' ')
                 .append("Resumo do cruzamento: ")
-                .append(result.summary());
+                .append(resumo);
 
         builder.append(' ')
                 .append("O sentimento predominante é ")
