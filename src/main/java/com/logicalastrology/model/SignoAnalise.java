@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "tb_signo_analise")
+@Table(name = "tb_signo_analise",
+        uniqueConstraints = @UniqueConstraint(name = "uk_signo_data_analise", columnNames = {"signo", "data_analise"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,16 +22,19 @@ public class SignoAnalise {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String signo;
 
-    @Column(name = "data_analise")
+    @Column(name = "data_analise", nullable = false)
     private LocalDate dataAnalise;
 
     @Column(length = 2000)
     private String resumo;
 
+    @Column(nullable = false)
     private String sentimento;
 
+    @Column(nullable = false)
     private double coerencia;
 
     @Builder.Default

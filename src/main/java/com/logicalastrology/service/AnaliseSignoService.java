@@ -37,11 +37,16 @@ public class AnaliseSignoService {
         LocalDate hoje = LocalDate.now();
 
         Optional<SignoAnalise> existenteHoje = signoAnaliseRepository
-                .findFirstBySignoIgnoreCaseAndDataAnalise(normalized, hoje);
+                .findTopBySignoIgnoreCaseAndDataAnaliseOrderByCriadoEmDesc(normalized, hoje);
         if (existenteHoje.isPresent()) {
             return toDto(existenteHoje.get());
         }
 
+        SignoAnalise novaAnalise = gerarNovaAnalise(normalized, hoje);
+        return toDto(novaAnalise);
+    }
+
+    private SignoAnalise gerarNovaAnalise(String normalized, LocalDate hoje) {
         List<Horoscopo> horoscoposDoDia = buscarHoroscoposDoDia(normalized, hoje);
         if (horoscoposDoDia.isEmpty()) {
             horoscoposDoDia = horoscopoRepository.findTop10BySignoIgnoreCaseOrderByDataColetaDesc(normalized);
@@ -70,8 +75,7 @@ public class AnaliseSignoService {
                 .destaques(destaques)
                 .build();
 
-        SignoAnalise salvo = signoAnaliseRepository.save(entidade);
-        return toDto(salvo);
+        return signoAnaliseRepository.save(entidade);
     }
 
     private List<Horoscopo> buscarHoroscoposDoDia(String sign, LocalDate hoje) {
