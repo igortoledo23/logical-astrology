@@ -7,5 +7,6 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface SignoAnaliseRepository extends JpaRepository<SignoAnalise, Long> {
-    Optional<SignoAnalise> findFirstBySignoIgnoreCaseAndDataAnalise(String signo, LocalDate dataAnalise);
+    Optional<SignoAnalise> findTopBySignoIgnoreCaseAndDataAnaliseOrderByCriadoEmDesc(String signo,
+                                                                                    LocalDate dataAnalise);
 }
