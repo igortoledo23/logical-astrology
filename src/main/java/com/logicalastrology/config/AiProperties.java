@@ -9,7 +9,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "ai")
 public class AiProperties {
 
-    private boolean enabled = false;
+    private boolean enabled = true;
     private String endpoint;
     private String apiKey;
     private String model = "gpt-3.5-turbo";
