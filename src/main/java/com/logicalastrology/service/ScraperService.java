@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +74,10 @@ public class ScraperService {
     }
 
     private Optional<Horoscopo> scrapeJoaoBidu(SignoConfig signo) {
+        if (jaExisteHoje(signo.nome(), "João Bidu")) {
+            log.info("Horóscopo de {} para {} já existe na data vigente; ignorando scraping.", signo.nome(), "João Bidu");
+            return Optional.empty();
+        }
         String url = String.format(JOAO_BIDU_TEMPLATE, signo.joaoBiduSlug());
         try {
             Document doc = Jsoup.connect(url).userAgent(USER_AGENT).get();
@@ -88,6 +93,10 @@ public class ScraperService {
     }
 
     private Optional<Horoscopo> scrapeHoroscopoVirtual(SignoConfig signo) {
+        if (jaExisteHoje(signo.nome(), "Horoscopo Virtual")) {
+            log.info("Horóscopo de {} para {} já existe na data vigente; ignorando scraping.", signo.nome(), "Horoscopo Virtual");
+            return Optional.empty();
+        }
         String url = String.format(HOROSCOPO_VIRTUAL_TEMPLATE, signo.horoscopoVirtualSlug());
         try {
             Document doc = Jsoup.connect(url).userAgent(USER_AGENT).get();
@@ -103,6 +112,10 @@ public class ScraperService {
     }
 
     private Optional<Horoscopo> scrapePersonare(SignoConfig signo) {
+        if (jaExisteHoje(signo.nome(), "Personare")) {
+            log.info("Horóscopo de {} para {} já existe na data vigente; ignorando scraping.", signo.nome(), "Personare");
+            return Optional.empty();
+        }
         String url = String.format(PERSONARE_TEMPLATE, signo.personareSlug());
         try {
             Document doc = Jsoup.connect(url).userAgent(USER_AGENT).get();
@@ -127,6 +140,12 @@ public class ScraperService {
                 .fonte(fonte)
                 .dataColeta(LocalDateTime.now())
                 .build());
+    }
+
+    private boolean jaExisteHoje(String signo, String fonte) {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = LocalDate.now().plusDays(1).atStartOfDay();
+        return horoscopoRepository.existsBySignoIgnoreCaseAndFonteIgnoreCaseAndDataColetaBetween(signo, fonte, inicio, fim);
     }
 
     private record SignoConfig(String nome, String joaoBiduSlug, String horoscopoVirtualSlug, String personareSlug) {

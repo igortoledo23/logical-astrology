@@ -42,11 +42,11 @@ public class AnaliseSignoService {
             return toDto(existenteHoje.get());
         }
 
-        SignoAnalise novaAnalise = gerarNovaAnalise(normalized, hoje);
+        SignoAnalise novaAnalise = gerarNovaAnalise(normalized, hoje, existenteHoje.orElse(null));
         return toDto(novaAnalise);
     }
 
-    private SignoAnalise gerarNovaAnalise(String normalized, LocalDate hoje) {
+    private SignoAnalise gerarNovaAnalise(String normalized, LocalDate hoje, SignoAnalise existente) {
         List<Horoscopo> horoscoposDoDia = buscarHoroscoposDoDia(normalized, hoje);
         if (horoscoposDoDia.isEmpty()) {
             horoscoposDoDia = horoscopoRepository.findTop10BySignoIgnoreCaseOrderByDataColetaDesc(normalized);
@@ -67,15 +67,14 @@ public class AnaliseSignoService {
                 ? Collections.emptyList()
                 : new ArrayList<>(resultado.highlights());
 
-        SignoAnalise entidade = SignoAnalise.builder()
-                .signo(normalized)
-                .dataAnalise(hoje)
-                .resumo(resumo)
-                .sentimento(sentimento)
-                .coerencia(coerencia)
-                .destaques(destaques)
-                .generated(gerado)
-                .build();
+        SignoAnalise entidade = existente != null ? existente : new SignoAnalise();
+        entidade.setSigno(normalized);
+        entidade.setDataAnalise(hoje);
+        entidade.setResumo(resumo);
+        entidade.setSentimento(sentimento);
+        entidade.setCoerencia(coerencia);
+        entidade.setDestaques(new ArrayList<>(destaques));
+        entidade.setGenerated(existente != null ? true : gerado);
 
         return signoAnaliseRepository.save(entidade);
     }

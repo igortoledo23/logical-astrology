@@ -15,4 +15,9 @@ public interface HoroscopoRepository extends JpaRepository<Horoscopo, Long> {
                                                              LocalDateTime end);
 
     List<Horoscopo> findTop10BySignoIgnoreCaseOrderByDataColetaDesc(String sign);
+
+    boolean existsBySignoIgnoreCaseAndFonteIgnoreCaseAndDataColetaBetween(String signo,
+                                                                           String fonte,
+                                                                           LocalDateTime inicio,
+                                                                           LocalDateTime fim);
 }
