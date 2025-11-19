@@ -2,20 +2,40 @@ package com.logicalastrology.service;
 
 import com.logicalastrology.model.Horoscopo;
 import com.logicalastrology.repository.HoroscopoRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Service
 public class ScraperService {
+
+    private static final String USER_AGENT = "Mozilla/5.0";
+    private static final String JOAO_BIDU_TEMPLATE =
+            "https://joaobidu.com.br/horoscopo-do-dia/horoscopo-do-dia-para-%s/";
+    private static final String HOROSCOPO_VIRTUAL_TEMPLATE =
+            "https://www.horoscopovirtual.com.br/horoscopo/%s";
+
+    private static final List<SignoConfig> SIGNOS = List.of(
+            new SignoConfig("aries"),
+            new SignoConfig("touro"),
+            new SignoConfig("gemeos"),
+            new SignoConfig("cancer"),
+            new SignoConfig("leao"),
+            new SignoConfig("virgem"),
+            new SignoConfig("libra"),
+            new SignoConfig("escorpiao"),
+            new SignoConfig("sagitario"),
+            new SignoConfig("capricornio"),
+            new SignoConfig("aquario"),
+            new SignoConfig("peixes")
+    );
 
     private final HoroscopoRepository horoscopoRepository;
 
@@ -28,65 +48,72 @@ public class ScraperService {
      */
     //@Scheduled(cron = "0 0 8 * * *") // todo dia às 08:00
     public void executarScraping() {
-        String signo = "aries";
         List<Horoscopo> resultados = new ArrayList<>();
 
-        // ===============================
-        // 1️⃣ Site: João Bidu
-        // ===============================
-        try {
-            Document doc = Jsoup.connect("https://joaobidu.com.br/horoscopo-do-dia/horoscopo-do-dia-para-aries/")
-                    .userAgent("Mozilla/5.0")
-                    .get();
-
-            // Normalmente, o texto principal do horóscopo está dentro de <p> dentro de uma div com classe específica
-            Elements paragrafos = doc.select(".MsoNormal");
-            String textoBidu = paragrafos.text();
-
-            Horoscopo h1 = Horoscopo.builder()
-                    .signo(signo)
-                    .descricao(textoBidu)
-                    .fonte("João Bidu")
-                    .dataColeta(LocalDateTime.now())
-                    .build();
-
-            resultados.add(h1);
-        } catch (Exception e) {
-            System.err.println("Falha ao coletar do João Bidu: " + e.getMessage());
+        for (SignoConfig signo : SIGNOS) {
+            resultados.addAll(coletarPorSigno(signo));
         }
 
-        // ===============================
-        // 2️⃣ Site: Horoscopo Virtual
-        // ===============================
-        try {
-            Document doc = Jsoup.connect("https://www.horoscopovirtual.com.br/horoscopo/aries")
-                    .userAgent("Mozilla/5.0")
-                    .get();
-
-            Elements paragrafos = doc.select(".text-wrapper");
-            String textoHoroscopoVirtual = paragrafos.text();
-
-            Horoscopo h2 = Horoscopo.builder()
-                    .signo(signo)
-                    .descricao(textoHoroscopoVirtual)
-                    .fonte("Horoscopo Virtual")
-                    .dataColeta(LocalDateTime.now())
-                    .build();
-
-            resultados.add(h2);
-        } catch (Exception e) {
-            System.err.println("Falha ao coletar do Horoscopo Virtual: " + e.getMessage());
-        }
-
-        // ===============================
-        // 3️⃣ Persistir tudo no H2
-        // ===============================
         if (!resultados.isEmpty()) {
             horoscopoRepository.saveAll(resultados);
-            System.out.println("✅ " + resultados.size() + " horóscopos salvos no H2 para " + signo);
+            log.info("✅ {} horóscopos salvos para {} signos", resultados.size(), SIGNOS.size());
         } else {
-            System.out.println("⚠️ Nenhum horóscopo coletado.");
+            log.warn("⚠️ Nenhum horóscopo coletado.");
         }
+    }
 
+    private List<Horoscopo> coletarPorSigno(SignoConfig signo) {
+        List<Horoscopo> coletados = new ArrayList<>();
+        scrapeJoaoBidu(signo).ifPresent(coletados::add);
+        scrapeHoroscopoVirtual(signo).ifPresent(coletados::add);
+        return coletados;
+    }
+
+    private Optional<Horoscopo> scrapeJoaoBidu(SignoConfig signo) {
+        String url = String.format(JOAO_BIDU_TEMPLATE, signo.joaoBiduSlug());
+        try {
+            Document doc = Jsoup.connect(url).userAgent(USER_AGENT).get();
+            String texto = doc.select(".MsoNormal").text();
+            if (texto.isBlank()) {
+                texto = doc.select("article p").text();
+            }
+            return buildHoroscopo(signo.nome(), "João Bidu", texto);
+        } catch (Exception e) {
+            log.warn("Falha ao coletar João Bidu para {}: {}", signo.nome(), e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Horoscopo> scrapeHoroscopoVirtual(SignoConfig signo) {
+        String url = String.format(HOROSCOPO_VIRTUAL_TEMPLATE, signo.horoscopoVirtualSlug());
+        try {
+            Document doc = Jsoup.connect(url).userAgent(USER_AGENT).get();
+            String texto = doc.select(".text-wrapper p").text();
+            if (texto.isBlank()) {
+                texto = doc.select(".text-wrapper").text();
+            }
+            return buildHoroscopo(signo.nome(), "Horoscopo Virtual", texto);
+        } catch (Exception e) {
+            log.warn("Falha ao coletar Horoscopo Virtual para {}: {}", signo.nome(), e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Horoscopo> buildHoroscopo(String signo, String fonte, String descricao) {
+        if (descricao == null || descricao.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.of(Horoscopo.builder()
+                .signo(signo)
+                .descricao(descricao)
+                .fonte(fonte)
+                .dataColeta(LocalDateTime.now())
+                .build());
+    }
+
+    private record SignoConfig(String nome, String joaoBiduSlug, String horoscopoVirtualSlug) {
+        private SignoConfig(String nome) {
+            this(nome, nome, nome);
+        }
     }
 }
