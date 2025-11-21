@@ -106,6 +106,7 @@ public class AnaliseSignoService {
         String resumo = resultado.summary() == null ? "" : resultado.summary();
         String sentimento = resultado.sentiment() == null ? "Indefinido" : resultado.sentiment();
         double coerencia = resultado.coherenceScore();
+        boolean generated = resultado.generated();
         List<String> destaques = resultado.highlights() == null
                 ? Collections.emptyList()
                 : new ArrayList<>(resultado.highlights());
@@ -117,7 +118,7 @@ public class AnaliseSignoService {
         entidade.setSentimento(sentimento);
         entidade.setCoerencia(coerencia);
         entidade.setDestaques(new ArrayList<>(destaques));
-        entidade.setGenerated(true);
+        entidade.setGenerated(generated);
         if (entidade.getCriadoEm() == null) {
             entidade.setCriadoEm(LocalDateTime.now());
         }
