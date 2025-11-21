@@ -5,6 +5,7 @@ import com.logicalastrology.repository.HoroscopoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -49,7 +50,7 @@ public class ScraperService {
     /**
      * Roda automaticamente 1x por dia (pode também ser executado manualmente via endpoint).
      */
-    //@Scheduled(cron = "0 0 8 * * *") // todo dia às 08:00
+    @Scheduled(cron = "0 0 8 * * *")
     public void executarScraping() {
         List<Horoscopo> resultados = new ArrayList<>();
 
