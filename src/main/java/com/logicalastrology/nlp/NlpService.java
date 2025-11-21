@@ -24,6 +24,7 @@ public class NlpService {
     private final RestTemplate restTemplate;
     private final AiProperties aiProperties;
     private final ObjectMapper objectMapper;
+    private static final Duration AI_CALL_DELAY = Duration.ofSeconds(5);
 
     public NlpService(AiProperties aiProperties,
                       RestTemplateBuilder restTemplateBuilder,
@@ -69,6 +70,14 @@ public class NlpService {
     }
 
     private AiAnalysisResult callAi(String signo, List<String> textos) throws RestClientException {
+        try {
+            Thread.sleep(AI_CALL_DELAY.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Chamada à IA interrompida antes de iniciar para {}", signo);
+            return null;
+        }
+
         Map<String, Object> body = buildRequestBody(signo, textos);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
