@@ -6,6 +6,7 @@ import java.util.List;
 public record AiAnalysisResult(String summary,
                                String sentiment,
                                double coherenceScore,
+                               boolean generated,
                                List<String> highlights) {
 
     public AiAnalysisResult {
