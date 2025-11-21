@@ -1,5 +1,6 @@
 package com.logicalastrology.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,8 +14,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AnaliseComparativaDTO {
-    private LocalDate dataAnalise;
+    private LocalDate data;
     private String analise;
     private String fonte;
     private String horoscopoFonte;

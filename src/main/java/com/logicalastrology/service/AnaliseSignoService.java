@@ -78,14 +78,20 @@ public class AnaliseSignoService {
         String resumo = analise.getResumo() == null ? "" : analise.getResumo();
         LocalDate dataAnalise = analise.getDataAnalise();
 
-        return horoscoposDoDia.stream()
+        List<AnaliseComparativaDTO> resposta = new ArrayList<>();
+        resposta.add(AnaliseComparativaDTO.builder()
+                .data(dataAnalise)
+                .analise(resumo)
+                .build());
+
+        horoscoposDoDia.stream()
                 .map(h -> AnaliseComparativaDTO.builder()
-                        .dataAnalise(dataAnalise)
-                        .analise(resumo)
                         .fonte(h.getFonte())
                         .horoscopoFonte(h.getDescricao())
                         .build())
-                .toList();
+                .forEach(resposta::add);
+
+        return resposta;
     }
 
     private SignoAnalise gerarNovaAnalise(String normalized, LocalDate data, SignoAnalise existente) {
