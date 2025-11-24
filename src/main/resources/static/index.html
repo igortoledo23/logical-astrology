@@ -2,6 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <title>Logical Astrology</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -134,7 +136,6 @@
           padding: 0.45rem 1.2rem;
         }
 
-        /* Texto da análise e previsões mais leve */
         .analysis-text {
           font-weight: 400;
           line-height: 1.5;
@@ -145,18 +146,15 @@
           line-height: 1.5;
         }
 
-        /* Título do signo na tela de análise */
         #selected-sign-name {
           font-size: 1.7rem;
           font-weight: 700;
         }
 
-        /* Título "Análise lógica do dia" reforçado */
         .analysis-title {
           font-weight: 700;
         }
 
-        /* Botões de fontes */
         .source-btn {
           font-size: 0.85rem;
           border-radius: 999px;
@@ -170,7 +168,6 @@
           box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
         }
 
-        /* Animação de fade/slide entre telas */
         @keyframes fadeSlideIn {
           from {
             opacity: 0;
@@ -186,6 +183,50 @@
           animation: fadeSlideIn 220ms ease-out;
         }
 
+        /* Logo glassmorphism */
+        .logo-link {
+          text-decoration: none;
+          color: inherit;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.6rem;
+        }
+
+        .logo-mark {
+          width: 40px;
+          height: 40px;
+          border-radius: 999px;
+          background: radial-gradient(circle at 30% 20%, rgba(244, 244, 255, 0.9), rgba(59, 130, 246, 0.35) 45%, rgba(15, 23, 42, 0.9));
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          font-size: 1.4rem;
+        }
+
+        .logo-symbol {
+          transform: translateY(-1px);
+        }
+
+        .logo-text {
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-weight: 700;
+          font-size: 1.6rem;
+        }
+
+        .logo-link:hover .logo-text {
+          text-shadow: 0 0 14px rgba(59, 130, 246, 0.8);
+        }
+
+        .logo-link:hover .logo-mark {
+          box-shadow: 0 16px 36px rgba(37, 99, 235, 0.5);
+          transform: translateY(-1px);
+        }
+
         @media (min-width: 768px) {
           :root {
             font-size: 18px;
@@ -199,15 +240,25 @@
           #selected-sign-name {
             font-size: 2rem;
           }
+          .logo-text {
+            font-size: 1.05rem;
+          }
         }
     </style>
 </head>
 <body>
 <div class="container py-4 py-md-5">
 
-    <!-- HEADER -->
+    <!-- HEADER com logo clicável -->
     <header class="mb-3 mb-md-4 text-center">
-        <h1 class="h3 mb-1">Logical Astrology</h1>
+        <h1 class="h3 mb-1">
+            <a href="/" id="logo-link" class="logo-link">
+          <span class="logo-mark">
+            <span class="logo-symbol">✦</span>
+          </span>
+                <span class="logo-text">Logical Astrology</span>
+            </a>
+        </h1>
         <p id="header-subtitle" class="mb-0 opacity-70">
             Astrologia fazendo sentido. Uma análise lógica e inteligente das principais fontes de horóscopos.
         </p>
@@ -231,7 +282,7 @@
             <h2 id="selected-sign-name" class="mt-1 mb-0"></h2>
         </div>
 
-        <!-- Strip reduzido de signos -->
+        <!-- Strip de signos -->
         <div class="glass-card p-3 mb-3">
             <div id="sign-strip" class="sign-strip">
                 <!-- preenchido via JS -->
@@ -240,7 +291,7 @@
 
         <!-- Cartão principal: análise + previsões -->
         <div class="glass-card p-4 p-md-4 d-flex flex-column gap-2">
-            <!-- Análise lógica -->
+            <!-- Análise -->
             <div>
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <h3 class="h6 mb-0 analysis-title">Análise lógica do dia</h3>
@@ -280,7 +331,7 @@
             </div>
         </div>
 
-        <!-- Botão voltar no final -->
+        <!-- Botão voltar -->
         <div class="mt-3 d-flex justify-content-center">
             <button type="button" id="back-button" class="btn btn-outline-light btn-sm btn-back">
                 ← Voltar
@@ -326,13 +377,13 @@
     const aiSpinner = document.getElementById("ai-spinner");
     const backButton = document.getElementById("back-button");
     const headerSubtitle = document.getElementById("header-subtitle");
+    const logoLink = document.getElementById("logo-link");
 
     let currentSignId = null;
     let activeSourceIndex = null;
 
     function applyViewAnimation(el) {
       el.classList.remove("animate-view");
-      // força reflow pra reiniciar animação
       void el.offsetWidth;
       el.classList.add("animate-view");
       setTimeout(() => el.classList.remove("animate-view"), 250);
@@ -352,7 +403,6 @@
       }
     }
 
-    // Grade principal de signos (tela inicial)
     function renderMainSignGrid() {
       SIGNS.forEach(sign => {
         const col = document.createElement("div");
@@ -377,7 +427,6 @@
       });
     }
 
-    // Strip reduzido de signos
     function renderSignStrip() {
       signStrip.innerHTML = "";
       SIGNS.forEach(sign => {
@@ -433,7 +482,6 @@
         btn.addEventListener("click", () => {
           const idx = Number(btn.dataset.index);
           if (activeSourceIndex === idx) {
-            // clicou de novo na mesma -> desmarca e limpa texto
             activeSourceIndex = null;
             setActiveSourceButton(null);
             sourceTextEl.innerHTML = "<span class='opacity-70'>Selecione uma das fontes acima para ver o texto.</span>";
@@ -509,7 +557,6 @@
           fetch(`/api/horoscopos/${signId}`)
         ]);
 
-        // ANÁLISE
         if (analiseResp.ok) {
           const analise = await analiseResp.json();
           const resumo = analise.summary || analise.resumo || "Análise não disponível.";
@@ -529,7 +576,6 @@
           coherenceChip.classList.add("d-none");
         }
 
-        // FONTES
         if (horoscoposResp.ok) {
           const lista = await horoscoposResp.json();
           renderSourceButtonsAndText(lista);
@@ -567,6 +613,12 @@
     // Botão voltar (final da página)
     backButton.addEventListener("click", () => {
       history.back();
+    });
+
+    // Clique no logo → volta para o menu principal
+    logoLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      navigateHome(true);
     });
 
     // Botão voltar do navegador
