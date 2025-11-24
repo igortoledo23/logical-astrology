@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <title>Logical Astrology</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap 5 -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    />
+
+    <!-- Estilo custom (glassmorphism + tamanhos maiores) -->
+    <style>
+        :root {
+          font-size: 19px;
+        }
+
+        body {
+          min-height: 100vh;
+          margin: 0;
+          padding: 0;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          background: radial-gradient(circle at top, #1b2440, #050816 55%, #02030a 100%);
+          color: #f5f5f5;
+        }
+
+        .glass-card {
+          background: rgba(255, 255, 255, 0.06);
+          border-radius: 22px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 0 22px 45px rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+        }
+
+        .sign-card {
+          cursor: pointer;
+          transition: transform 0.15s ease, box-shadow 0.15s ease, border 0.15s ease, background 0.15s ease;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.07);
+          border: 1px solid transparent;
+          min-height: 120px;
+        }
+
+        .sign-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.09);
+        }
+
+        .sign-icon-big {
+          font-size: 2.5rem;
+        }
+
+        .sign-name-big {
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          font-size: 1.05rem;
+        }
+
+        .sign-strip {
+          display: flex;
+          gap: 0.4rem;
+          overflow-x: auto;
+          padding-bottom: 0.3rem;
+          justify-content: center;
+        }
+
+        .sign-strip-item {
+          min-width: 3.1rem;
+          max-width: 3.1rem;
+          height: 3.1rem;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.08);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 1.3rem;
+          transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, border 0.1s ease;
+          flex-shrink: 0;
+        }
+
+        .sign-strip-item span {
+          font-size: 0.55rem;
+          line-height: 0.7rem;
+          margin-top: -2px;
+        }
+
+        .sign-strip-item.active {
+          background: rgba(56, 189, 248, 0.2);
+          border-color: rgba(56, 189, 248, 0.9);
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+          transform: translateY(-1px);
+        }
+
+        .coherence-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.4rem 0.9rem;
+          border-radius: 999px;
+          background: rgba(56, 189, 248, 0.1);
+          border: 1px solid rgba(56, 189, 248, 0.6);
+          font-size: 0.85rem;
+          color: #7dd3fc;
+          white-space: nowrap;
+        }
+
+        .badge-source {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 999px;
+          font-size: 0.75rem;
+          padding: 0.2rem 0.6rem;
+        }
+
+        .opacity-70 { opacity: 0.7; }
+        .opacity-80 { opacity: 0.8; }
+
+        .view-hidden {
+          display: none !important;
+        }
+
+        .btn-back {
+          border-radius: 999px;
+          border-width: 1px;
+          font-size: 0.9rem;
+          padding: 0.45rem 1.2rem;
+        }
+
+        .analysis-text {
+          font-weight: 400;
+          line-height: 1.5;
+        }
+
+        .prediction-text {
+          font-weight: 400;
+          line-height: 1.5;
+        }
+
+        #selected-sign-name {
+          font-size: 1.7rem;
+          font-weight: 700;
+        }
+
+        .analysis-title {
+          font-weight: 700;
+        }
+
+        .theme-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 16px;
+        }
+
+        .theme-btn {
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          color: #e0f2fe;
+        }
+
+        .theme-btn.active {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.9);
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+        }
+
+        .thematic-result {
+          min-height: 80px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .source-btn {
+          font-size: 0.85rem;
+          border-radius: 999px;
+          padding: 0.3rem 0.9rem;
+        }
+
+        .source-btn.active {
+          background-color: rgba(56, 189, 248, 0.2);
+          border-color: rgba(56, 189, 248, 0.9);
+          color: #e0f2fe;
+          box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+        }
+
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-view {
+          animation: fadeSlideIn 220ms ease-out;
+        }
+
+        /* Logo glassmorphism */
+        .logo-link {
+          text-decoration: none;
+          color: inherit;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.9rem;
+          white-space: nowrap;
+        }
+
+        .logo-mark {
+          width: 35px;
+          height: 35px;
+          border-radius: 999px;
+          background: radial-gradient(circle at 30% 20%, rgba(244, 244, 255, 0.9), rgba(59, 130, 246, 0.35) 45%, rgba(15, 23, 42, 0.9));
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          font-size: 1.4rem;
+        }
+
+        .logo-symbol {
+          transform: translateY(-1px);
+        }
+
+        .logo-text {
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-weight: 700;
+          font-size: 1.6rem;
+        }
+
+        .logo-link:hover .logo-text {
+          text-shadow: 0 0 14px rgba(59, 130, 246, 0.8);
+        }
+
+        .logo-link:hover .logo-mark {
+          box-shadow: 0 16px 36px rgba(37, 99, 235, 0.5);
+          transform: translateY(-1px);
+        }
+
+        @media (min-width: 768px) {
+          :root {
+            font-size: 20px;
+          }
+          .sign-card {
+            min-height: 130px;
+          }
+          .sign-icon-big {
+            font-size: 3.1rem;
+          }
+          #selected-sign-name {
+            font-size: 2rem;
+          }
+          .logo-text {
+            font-size: 1.4rem;
+          }
+        }
+        @media (max-width: 480px) {
+            .logo-mark {
+            width: 35px;
+            height: 35px;
+            font-size: 2rem;
+            }
+
+            .sign-name-big {
+             font-size: 0.9rem;
+            }
+
+            .logo-text {
+            font-size: 1.3rem;
+            letter-spacing: 0.13em;
+            }
+       }
+    </style>
+</head>
+<body>
+<div class="container py-4 py-md-5">
+
+    <!-- HEADER com logo clicável -->
+    <header class="mb-3 mb-md-4 text-center">
+        <h1 class="h3 mb-1">
+            <a href="/" id="logo-link" class="logo-link">
+          <span class="logo-mark">
+            <span class="logo-symbol">✦</span>
+          </span>
+                <span class="logo-text">Logical Astrology</span>
+            </a>
+        </h1>
+        <p id="header-subtitle" class="mb-0 opacity-70">
+            Astrologia fazendo sentido. Uma análise lógica e inteligente das principais fontes de horóscopos.
+        </p>
+    </header>
+
+    <!-- Previsão temática com pagamento -->
+    <section class="mb-3 mb-md-4">
+      <div class="theme-card p-4 p-md-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+          <div>
+            <h2 class="h6 mb-1">Previsão temática personalizada</h2>
+            <p class="mb-0 opacity-70">Escolha um tema, informe seus dados e libere o conselho motivador após o pagamento seguro.</p>
+          </div>
+          <div class="d-flex flex-wrap gap-2" id="theme-buttons"></div>
+        </div>
+
+        <form id="theme-form" class="row g-2 g-md-3 mb-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Seu nome</label>
+            <input type="text" id="user-name" class="form-control form-control-sm" placeholder="Digite seu nome" required />
+          </div>
+          <div class="col-12 col-md-4" id="love-name-wrapper" style="display: none;">
+            <label class="form-label small mb-1">Nome do amor</label>
+            <input type="text" id="love-name" class="form-control form-control-sm" placeholder="Para tema amor" />
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Sentimento atual</label>
+            <select id="sentiment" class="form-select form-select-sm">
+              <option value="POSITIVO">Positivo</option>
+              <option value="NEGATIVO">Negativo</option>
+            </select>
+          </div>
+          <div class="col-12 d-flex justify-content-end">
+            <button type="submit" class="btn btn-info btn-sm">Gerar previsão</button>
+          </div>
+        </form>
+
+        <div id="payment-alert" class="small mb-2 opacity-80"></div>
+        <div id="thematic-result" class="thematic-result p-3"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 1: SELEÇÃO DE SIGNOS -->
+    <section id="signs-view" class="mb-3 mb-md-4">
+        <div class="glass-card p-4 p-md-5">
+            <h2 class="h5 text-uppercase opacity-80 mb-4 text-center">Escolha um signo</h2>
+            <div class="row g-3 g-md-4" id="sign-grid-main">
+                <!-- preenchido via JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW 2: DETALHES / ANÁLISE -->
+    <section id="details-view" class="view-hidden">
+        <!-- Cabeçalho do signo -->
+        <div class="mb-3 text-center">
+            <div id="selected-sign-icon" style="font-size: 2.3rem;">✨</div>
+            <h2 id="selected-sign-name" class="mt-1 mb-0"></h2>
+        </div>
+
+        <!-- Strip de signos -->
+        <div class="glass-card p-3 mb-3">
+            <div id="sign-strip" class="sign-strip">
+                <!-- preenchido via JS -->
+            </div>
+        </div>
+
+        <!-- Cartão principal: análise + previsões -->
+        <div class="glass-card p-4 p-md-4 d-flex flex-column gap-2">
+            <!-- Análise -->
+            <div>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h3 class="h6 mb-0 analysis-title">Análise lógica do dia</h3>
+                    <div class="d-flex align-items-center gap-2">
+              <span id="coherence-chip" class="coherence-pill d-none">
+                <span class="small">Coerência:</span>
+                <span id="coherence-score">0%</span>
+              </span>
+                        <span class="spinner-border spinner-border-sm d-none" id="ai-spinner" role="status"></span>
+                    </div>
+                </div>
+                <div id="analysis-box" class="analysis-text mt-2">
+            <span class="opacity-70">
+              Aqui aparecerá o resumo consolidado gerado para o signo selecionado.
+            </span>
+                </div>
+            </div>
+
+            <!-- O que dizem os principais sites... -->
+            <div class="mt-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="h6 mb-0">O que dizem os principais sites...</h3>
+                    <span class="small opacity-70" id="sources-count-label">0 sites</span>
+                </div>
+
+                <!-- Botões das fontes -->
+                <div id="sources-buttons" class="d-flex flex-wrap gap-2 mb-2">
+                    <!-- preenchido via JS -->
+                </div>
+
+                <!-- Texto da fonte selecionada -->
+                <div id="source-text" class="prediction-text">
+            <span class="opacity-70">
+              Selecione uma das fontes acima para ver o texto.
+            </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão voltar -->
+        <div class="mt-3 d-flex justify-content-center">
+            <button type="button" id="back-button" class="btn btn-outline-light btn-sm btn-back">
+                ← Voltar
+            </button>
+        </div>
+    </section>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Mercado Pago -->
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+
+<!-- Lógica JS -->
+<script>
+    const SIGNS = [
+      { id: "aries", label: "Áries", icon: "♈" },
+      { id: "touro", label: "Touro", icon: "♉" },
+      { id: "gemeos", label: "Gêmeos", icon: "♊" },
+      { id: "cancer", label: "Câncer", icon: "♋" },
+      { id: "leao", label: "Leão", icon: "♌" },
+      { id: "virgem", label: "Virgem", icon: "♍" },
+      { id: "libra", label: "Libra", icon: "♎" },
+      { id: "escorpiao", label: "Escorp", icon: "♏" },
+      { id: "sagitario", label: "Sagitár", icon: "♐" },
+      { id: "capricornio", label: "Capricór", icon: "♑" },
+      { id: "aquario", label: "Aquário", icon: "♒" },
+      { id: "peixes", label: "Peixes", icon: "♓" },
+    ];
+
+    const THEMES = [
+      { id: "AMOR", label: "Amor" },
+      { id: "TRABALHO", label: "Trabalho" },
+      { id: "FAMILIA", label: "Família" },
+      { id: "AMIGOS", label: "Amigos" },
+    ];
+
+    const signsView = document.getElementById("signs-view");
+    const detailsView = document.getElementById("details-view");
+    const signGridMain = document.getElementById("sign-grid-main");
+    const signStrip = document.getElementById("sign-strip");
+
+    const selectedSignIcon = document.getElementById("selected-sign-icon");
+    const selectedSignName = document.getElementById("selected-sign-name");
+    const analysisBox = document.getElementById("analysis-box");
+    const coherenceChip = document.getElementById("coherence-chip");
+    const coherenceScore = document.getElementById("coherence-score");
+    const sourcesCountLabel = document.getElementById("sources-count-label");
+    const sourcesButtons = document.getElementById("sources-buttons");
+    const sourceTextEl = document.getElementById("source-text");
+    const aiSpinner = document.getElementById("ai-spinner");
+    const backButton = document.getElementById("back-button");
+    const headerSubtitle = document.getElementById("header-subtitle");
+    const logoLink = document.getElementById("logo-link");
+
+    const themeButtons = document.getElementById("theme-buttons");
+    const themeForm = document.getElementById("theme-form");
+    const userNameInput = document.getElementById("user-name");
+    const loveNameWrapper = document.getElementById("love-name-wrapper");
+    const loveNameInput = document.getElementById("love-name");
+    const sentimentSelect = document.getElementById("sentiment");
+    const paymentAlert = document.getElementById("payment-alert");
+    const thematicResult = document.getElementById("thematic-result");
+
+    let selectedTheme = null;
+    let activePaymentToken = localStorage.getItem("activePaymentToken");
+    let currentPreferenceId = null;
+    let pollInterval = null;
+    let mpPublicKey = null;
+    let mpInstance = null;
+    let currentMpKey = null;
+
+    let currentSignId = null;
+    let activeSourceIndex = null;
+
+    function applyViewAnimation(el) {
+      el.classList.remove("animate-view");
+      void el.offsetWidth;
+      el.classList.add("animate-view");
+      setTimeout(() => el.classList.remove("animate-view"), 250);
+    }
+
+    function setView(view) {
+      if (view === "home") {
+        signsView.classList.remove("view-hidden");
+        detailsView.classList.add("view-hidden");
+        headerSubtitle.style.display = "block";
+        applyViewAnimation(signsView);
+      } else if (view === "sign") {
+        detailsView.classList.remove("view-hidden");
+        signsView.classList.add("view-hidden");
+        headerSubtitle.style.display = "none";
+        applyViewAnimation(detailsView);
+      }
+    }
+
+    function renderThemeButtons() {
+      themeButtons.innerHTML = "";
+      THEMES.forEach(theme => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-outline-info btn-sm theme-btn";
+        btn.textContent = theme.label;
+        btn.dataset.themeId = theme.id;
+        btn.addEventListener("click", () => selectTheme(theme.id));
+        themeButtons.appendChild(btn);
+      });
+      if (!selectedTheme && THEMES.length > 0) {
+        selectTheme(THEMES[0].id);
+      }
+    }
+
+    function selectTheme(themeId) {
+      selectedTheme = themeId;
+      const buttons = themeButtons.querySelectorAll(".theme-btn");
+      buttons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.themeId === themeId);
+      });
+      loveNameWrapper.style.display = themeId === "AMOR" ? "block" : "none";
+    }
+
+    function setPaymentMessage(message, type = "info") {
+      const className = type === "success" ? "text-success" : type === "warning" ? "text-warning" : "text-info";
+      paymentAlert.className = `small mb-2 ${className}`;
+      paymentAlert.textContent = message || "";
+    }
+
+    function renderThematicResult(content) {
+      if (!content) {
+        thematicResult.innerHTML = "<span class='opacity-70'>O resultado aparecerá aqui após a confirmação do pagamento.</span>";
+        return;
+      }
+      const safe = escapeHtml(String(content)).replace(/\n/g, "<br>");
+      thematicResult.innerHTML = `<div>${safe}</div>`;
+    }
+
+    async function startThematicPrediction(event) {
+      event.preventDefault();
+      if (!selectedTheme) {
+        setPaymentMessage("Escolha um tema para continuar.", "warning");
+        return;
+      }
+      const nome = userNameInput.value.trim();
+      const nomeAmor = loveNameInput.value.trim();
+      if (!nome) {
+        setPaymentMessage("Informe seu nome para gerar a previsão.", "warning");
+        return;
+      }
+      setPaymentMessage("Criando pagamento e preparando sua previsão...", "info");
+      renderThematicResult("");
+
+      const payload = {
+        tema: selectedTheme,
+        nome,
+        nomeAmor: selectedTheme === "AMOR" ? nomeAmor : undefined,
+        sentimento: sentimentSelect.value,
+        activePaymentToken: activePaymentToken || undefined,
+      };
+
+      try {
+        const resp = await fetch("/api/previsoes/tematicas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          throw new Error("Não foi possível iniciar a previsão temática.");
+        }
+        const data = await resp.json();
+        currentPreferenceId = data.preferenceId;
+        mpPublicKey = data.publicKey;
+        const valor = data.valorFinal || data.valorBase;
+        const descontoTxt = data.discountApplied ? "(30% de desconto ativo)" : "";
+        setPaymentMessage(`Pagamento criado. Valor: R$ ${valor} ${descontoTxt}. Confirme no checkout para liberar a mensagem.`, "info");
+        iniciarCheckout(data.preferenceId);
+        iniciarPollingStatus(data.preferenceId);
+      } catch (error) {
+        console.error(error);
+        setPaymentMessage(error.message || "Erro ao iniciar a previsão.", "warning");
+      }
+    }
+
+    function iniciarCheckout(preferenceId) {
+      if (!mpPublicKey || typeof MercadoPago === "undefined") {
+        setPaymentMessage("SDK do Mercado Pago não carregado.", "warning");
+        return;
+      }
+      if (!mpInstance || currentMpKey !== mpPublicKey) {
+        mpInstance = new MercadoPago(mpPublicKey, { locale: "pt-BR" });
+        currentMpKey = mpPublicKey;
+      }
+      mpInstance.checkout({
+        preference: { id: preferenceId },
+        autoOpen: true,
+      });
+    }
+
+    function iniciarPollingStatus(preferenceId) {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+      verificarStatus(preferenceId);
+      pollInterval = setInterval(() => verificarStatus(preferenceId), 4000);
+    }
+
+    async function verificarStatus(preferenceId) {
+      try {
+        const resp = await fetch(`/api/previsoes/tematicas/${preferenceId}`);
+        if (!resp.ok) {
+          throw new Error("Não foi possível verificar o status do pagamento.");
+        }
+        const data = await resp.json();
+        if (data.status === "PAID") {
+          if (pollInterval) clearInterval(pollInterval);
+          activePaymentToken = preferenceId;
+          localStorage.setItem("activePaymentToken", preferenceId);
+          setPaymentMessage(`Pagamento aprovado! Acesso válido até ${formatarData(data.expiresAt)}.`, "success");
+          renderThematicResult(data.mensagem || "Mensagem gerada.");
+        } else if (data.status === "EXPIRED") {
+          if (pollInterval) clearInterval(pollInterval);
+          if (activePaymentToken === preferenceId) {
+            localStorage.removeItem("activePaymentToken");
+            activePaymentToken = null;
+          }
+          setPaymentMessage("Token expirado. Solicite uma nova previsão para continuar.", "warning");
+          renderThematicResult("");
+        } else {
+          renderThematicResult("<span class='opacity-70'>Aguardando confirmação do pagamento...</span>");
+        }
+      } catch (err) {
+        console.error(err);
+        setPaymentMessage(err.message || "Erro ao consultar status.", "warning");
+      }
+    }
+
+    function formatarData(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      return d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderMainSignGrid() {
+      SIGNS.forEach(sign => {
+        const col = document.createElement("div");
+        col.className = "col-4 col-md-3";
+
+        const card = document.createElement("div");
+        card.className = "sign-card p-3 text-center h-100";
+        card.onclick = () => navigateToSign(sign.id);
+
+        const icon = document.createElement("div");
+        icon.className = "sign-icon-big mb-2";
+        icon.textContent = sign.icon;
+
+        const label = document.createElement("div");
+        label.className = "sign-name-big";
+        label.textContent = sign.label;
+
+        card.appendChild(icon);
+        card.appendChild(label);
+        col.appendChild(card);
+        signGridMain.appendChild(col);
+      });
+    }
+
+    function renderSignStrip() {
+      signStrip.innerHTML = "";
+      SIGNS.forEach(sign => {
+        const item = document.createElement("div");
+        item.className = "sign-strip-item";
+        item.dataset.signId = sign.id;
+        item.onclick = () => navigateToSign(sign.id);
+
+        const icon = document.createElement("div");
+        icon.textContent = sign.icon;
+
+        const label = document.createElement("span");
+        label.textContent = sign.label.substring(0, 3).toUpperCase();
+
+        item.appendChild(icon);
+        item.appendChild(label);
+        signStrip.appendChild(item);
+      });
+    }
+
+    function setActiveStripSign(signId) {
+      const items = signStrip.querySelectorAll(".sign-strip-item");
+      items.forEach(el => {
+        if (el.dataset.signId === signId) {
+          el.classList.add("active");
+        } else {
+          el.classList.remove("active");
+        }
+      });
+    }
+
+    function renderSourceButtonsAndText(lista) {
+      sourcesButtons.innerHTML = "";
+      activeSourceIndex = null;
+
+      if (!Array.isArray(lista) || lista.length === 0) {
+        sourcesCountLabel.textContent = "0 sites";
+        sourceTextEl.innerHTML = "<span class='opacity-70'>Não há previsões registradas para este signo ainda.</span>";
+        return;
+      }
+
+      sourcesCountLabel.textContent = `${lista.length} site(s)`;
+      sourceTextEl.innerHTML = "<span class='opacity-70'>Selecione uma das fontes acima para ver o texto.</span>";
+
+      lista.forEach((item, index) => {
+        const fonteNome = item.source || item.fonte || "Fonte desconhecida";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-outline-light btn-sm source-btn";
+        btn.textContent = fonteNome;
+        btn.dataset.index = index.toString();
+
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.index);
+          if (activeSourceIndex === idx) {
+            activeSourceIndex = null;
+            setActiveSourceButton(null);
+            sourceTextEl.innerHTML = "<span class='opacity-70'>Selecione uma das fontes acima para ver o texto.</span>";
+          } else {
+            activeSourceIndex = idx;
+            setActiveSourceButton(idx);
+            renderSourceText(lista[idx]);
+          }
+        });
+
+        sourcesButtons.appendChild(btn);
+      });
+    }
+
+    function setActiveSourceButton(activeIdx) {
+      const allButtons = sourcesButtons.querySelectorAll(".source-btn");
+      allButtons.forEach((btn, idx) => {
+        if (activeIdx === null) {
+          btn.classList.remove("active");
+        } else if (idx === activeIdx) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+    }
+
+    function renderSourceText(item) {
+      if (!item) {
+        sourceTextEl.innerHTML = "<span class='opacity-70'>Selecione uma das fontes acima para ver o texto.</span>";
+        return;
+      }
+
+      const texto = item.text || item.descricao || "";
+      const dataStr = item.dataColeta || item.date;
+      const fonteNome = item.source || item.fonte || "Fonte desconhecida";
+
+      let metaLinha = "";
+      if (dataStr) {
+        metaLinha = `<div class="small opacity-70 mb-1">${fonteNome} • ${dataStr.toString().substring(0, 10)}</div>`;
+      } else {
+        metaLinha = `<div class="small opacity-70 mb-1">${fonteNome}</div>`;
+      }
+
+      sourceTextEl.innerHTML = `
+        ${metaLinha}
+        <div class="prediction-text">${texto}</div>
+      `;
+    }
+
+    async function loadSignData(signId, { pushHistory } = { pushHistory: true }) {
+      const sign = SIGNS.find(s => s.id === signId);
+      if (!sign) return;
+
+      currentSignId = signId;
+
+      selectedSignIcon.textContent = sign.icon;
+      selectedSignName.textContent = sign.label;
+      analysisBox.innerHTML = "<span class='opacity-70'>Carregando análise do dia...</span>";
+      sourceTextEl.innerHTML = "<span class='opacity-70'>Carregando previsões das fontes...</span>";
+      sourcesButtons.innerHTML = "";
+      coherenceChip.classList.add("d-none");
+      aiSpinner.classList.remove("d-none");
+      setActiveStripSign(signId);
+
+      if (pushHistory) {
+        history.pushState({ view: "sign", signId }, "", "#" + signId);
+      }
+
+      try {
+        const [analiseResp, horoscoposResp] = await Promise.all([
+          fetch(`/api/analise/${signId}`),
+          fetch(`/api/horoscopos/${signId}`)
+        ]);
+
+        if (analiseResp.ok) {
+          const analise = await analiseResp.json();
+          const resumo = analise.summary || analise.resumo || "Análise não disponível.";
+          const score = analise.coherenceScore ?? analise.coerencia ?? null;
+
+          analysisBox.textContent = resumo;
+
+          if (score !== null && !isNaN(score)) {
+            const perc = Math.round(Number(score) * 100);
+            coherenceScore.textContent = perc + "%";
+            coherenceChip.classList.remove("d-none");
+          } else {
+            coherenceChip.classList.add("d-none");
+          }
+        } else {
+          analysisBox.innerHTML = "<span class='text-warning'>Não foi possível carregar a análise para este signo.</span>";
+          coherenceChip.classList.add("d-none");
+        }
+
+        if (horoscoposResp.ok) {
+          const lista = await horoscoposResp.json();
+          renderSourceButtonsAndText(lista);
+        } else {
+          sourcesCountLabel.textContent = "0 sites";
+          sourcesButtons.innerHTML = "";
+          sourceTextEl.innerHTML = "<span class='text-warning'>Erro ao buscar previsões deste signo.</span>";
+        }
+
+        setView("sign");
+      } catch (err) {
+        console.error(err);
+        analysisBox.innerHTML = "<span class='text-danger'>Erro ao consultar a API de análise.</span>";
+        sourcesCountLabel.textContent = "0 sites";
+        sourcesButtons.innerHTML = "";
+        sourceTextEl.innerHTML = "<span class='text-danger'>Erro ao consultar a API de previsões.</span>";
+        coherenceChip.classList.add("d-none");
+      } finally {
+        aiSpinner.classList.add("d-none");
+      }
+    }
+
+    function navigateToSign(signId) {
+      loadSignData(signId, { pushHistory: true });
+    }
+
+    function navigateHome(push = true) {
+      currentSignId = null;
+      if (push) {
+        history.pushState({ view: "home" }, "", "/");
+      }
+      setView("home");
+    }
+
+    // Botão voltar (final da página)
+    backButton.addEventListener("click", () => {
+      history.back();
+    });
+
+    themeForm.addEventListener("submit", startThematicPrediction);
+
+    // Clique no logo → volta para o menu principal
+    logoLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      navigateHome(true);
+    });
+
+    // Botão voltar do navegador
+    window.addEventListener("popstate", (event) => {
+      const state = event.state;
+      if (!state || state.view === "home") {
+        navigateHome(false);
+      } else if (state.view === "sign" && state.signId) {
+        loadSignData(state.signId, { pushHistory: false });
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderThemeButtons();
+      if (activePaymentToken) {
+        setPaymentMessage("Token de pagamento ativo detectado: você tem 30% de desconto para novas previsões enquanto durar.", "info");
+      } else {
+        setPaymentMessage("Escolha um tema e gere sua previsão personalizada.", "info");
+      }
+      renderMainSignGrid();
+      renderSignStrip();
+
+      const hash = window.location.hash;
+      if (hash && hash.startsWith("#")) {
+        const signId = hash.substring(1);
+        const signExists = SIGNS.some(s => s.id === signId);
+        if (signExists) {
+          history.replaceState({ view: "sign", signId }, "", "#" + signId);
+          loadSignData(signId, { pushHistory: false });
+          return;
+        }
+      }
+      history.replaceState({ view: "home" }, "", "/");
+      setView("home");
+    });
+</script>
+</body>
+</html>
