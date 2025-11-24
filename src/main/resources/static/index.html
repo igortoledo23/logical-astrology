@@ -155,6 +155,31 @@
           font-weight: 700;
         }
 
+        .theme-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 16px;
+        }
+
+        .theme-btn {
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          color: #e0f2fe;
+        }
+
+        .theme-btn.active {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.9);
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+        }
+
+        .thematic-result {
+          min-height: 80px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
         .source-btn {
           font-size: 0.85rem;
           border-radius: 999px;
@@ -281,6 +306,43 @@
         </p>
     </header>
 
+    <!-- Previsão temática com pagamento -->
+    <section class="mb-3 mb-md-4">
+      <div class="theme-card p-4 p-md-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+          <div>
+            <h2 class="h6 mb-1">Previsão temática personalizada</h2>
+            <p class="mb-0 opacity-70">Escolha um tema, informe seus dados e libere o conselho motivador após o pagamento seguro.</p>
+          </div>
+          <div class="d-flex flex-wrap gap-2" id="theme-buttons"></div>
+        </div>
+
+        <form id="theme-form" class="row g-2 g-md-3 mb-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Seu nome</label>
+            <input type="text" id="user-name" class="form-control form-control-sm" placeholder="Digite seu nome" required />
+          </div>
+          <div class="col-12 col-md-4" id="love-name-wrapper" style="display: none;">
+            <label class="form-label small mb-1">Nome do amor</label>
+            <input type="text" id="love-name" class="form-control form-control-sm" placeholder="Para tema amor" />
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Sentimento atual</label>
+            <select id="sentiment" class="form-select form-select-sm">
+              <option value="POSITIVO">Positivo</option>
+              <option value="NEGATIVO">Negativo</option>
+            </select>
+          </div>
+          <div class="col-12 d-flex justify-content-end">
+            <button type="submit" class="btn btn-info btn-sm">Gerar previsão</button>
+          </div>
+        </form>
+
+        <div id="payment-alert" class="small mb-2 opacity-80"></div>
+        <div id="thematic-result" class="thematic-result p-3"></div>
+      </div>
+    </section>
+
     <!-- VIEW 1: SELEÇÃO DE SIGNOS -->
     <section id="signs-view" class="mb-3 mb-md-4">
         <div class="glass-card p-4 p-md-5">
@@ -361,6 +423,9 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Mercado Pago -->
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+
 <!-- Lógica JS -->
 <script>
     const SIGNS = [
@@ -376,6 +441,13 @@
       { id: "capricornio", label: "Capricór", icon: "♑" },
       { id: "aquario", label: "Aquário", icon: "♒" },
       { id: "peixes", label: "Peixes", icon: "♓" },
+    ];
+
+    const THEMES = [
+      { id: "AMOR", label: "Amor" },
+      { id: "TRABALHO", label: "Trabalho" },
+      { id: "FAMILIA", label: "Família" },
+      { id: "AMIGOS", label: "Amigos" },
     ];
 
     const signsView = document.getElementById("signs-view");
@@ -395,6 +467,23 @@
     const backButton = document.getElementById("back-button");
     const headerSubtitle = document.getElementById("header-subtitle");
     const logoLink = document.getElementById("logo-link");
+
+    const themeButtons = document.getElementById("theme-buttons");
+    const themeForm = document.getElementById("theme-form");
+    const userNameInput = document.getElementById("user-name");
+    const loveNameWrapper = document.getElementById("love-name-wrapper");
+    const loveNameInput = document.getElementById("love-name");
+    const sentimentSelect = document.getElementById("sentiment");
+    const paymentAlert = document.getElementById("payment-alert");
+    const thematicResult = document.getElementById("thematic-result");
+
+    let selectedTheme = null;
+    let activePaymentToken = localStorage.getItem("activePaymentToken");
+    let currentPreferenceId = null;
+    let pollInterval = null;
+    let mpPublicKey = null;
+    let mpInstance = null;
+    let currentMpKey = null;
 
     let currentSignId = null;
     let activeSourceIndex = null;
@@ -418,6 +507,160 @@
         headerSubtitle.style.display = "none";
         applyViewAnimation(detailsView);
       }
+    }
+
+    function renderThemeButtons() {
+      themeButtons.innerHTML = "";
+      THEMES.forEach(theme => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-outline-info btn-sm theme-btn";
+        btn.textContent = theme.label;
+        btn.dataset.themeId = theme.id;
+        btn.addEventListener("click", () => selectTheme(theme.id));
+        themeButtons.appendChild(btn);
+      });
+      if (!selectedTheme && THEMES.length > 0) {
+        selectTheme(THEMES[0].id);
+      }
+    }
+
+    function selectTheme(themeId) {
+      selectedTheme = themeId;
+      const buttons = themeButtons.querySelectorAll(".theme-btn");
+      buttons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.themeId === themeId);
+      });
+      loveNameWrapper.style.display = themeId === "AMOR" ? "block" : "none";
+    }
+
+    function setPaymentMessage(message, type = "info") {
+      const className = type === "success" ? "text-success" : type === "warning" ? "text-warning" : "text-info";
+      paymentAlert.className = `small mb-2 ${className}`;
+      paymentAlert.textContent = message || "";
+    }
+
+    function renderThematicResult(content) {
+      if (!content) {
+        thematicResult.innerHTML = "<span class='opacity-70'>O resultado aparecerá aqui após a confirmação do pagamento.</span>";
+        return;
+      }
+      const safe = escapeHtml(String(content)).replace(/\n/g, "<br>");
+      thematicResult.innerHTML = `<div>${safe}</div>`;
+    }
+
+    async function startThematicPrediction(event) {
+      event.preventDefault();
+      if (!selectedTheme) {
+        setPaymentMessage("Escolha um tema para continuar.", "warning");
+        return;
+      }
+      const nome = userNameInput.value.trim();
+      const nomeAmor = loveNameInput.value.trim();
+      if (!nome) {
+        setPaymentMessage("Informe seu nome para gerar a previsão.", "warning");
+        return;
+      }
+      setPaymentMessage("Criando pagamento e preparando sua previsão...", "info");
+      renderThematicResult("");
+
+      const payload = {
+        tema: selectedTheme,
+        nome,
+        nomeAmor: selectedTheme === "AMOR" ? nomeAmor : undefined,
+        sentimento: sentimentSelect.value,
+        activePaymentToken: activePaymentToken || undefined,
+      };
+
+      try {
+        const resp = await fetch("/api/previsoes/tematicas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          throw new Error("Não foi possível iniciar a previsão temática.");
+        }
+        const data = await resp.json();
+        currentPreferenceId = data.preferenceId;
+        mpPublicKey = data.publicKey;
+        const valor = data.valorFinal || data.valorBase;
+        const descontoTxt = data.discountApplied ? "(30% de desconto ativo)" : "";
+        setPaymentMessage(`Pagamento criado. Valor: R$ ${valor} ${descontoTxt}. Confirme no checkout para liberar a mensagem.`, "info");
+        iniciarCheckout(data.preferenceId);
+        iniciarPollingStatus(data.preferenceId);
+      } catch (error) {
+        console.error(error);
+        setPaymentMessage(error.message || "Erro ao iniciar a previsão.", "warning");
+      }
+    }
+
+    function iniciarCheckout(preferenceId) {
+      if (!mpPublicKey || typeof MercadoPago === "undefined") {
+        setPaymentMessage("SDK do Mercado Pago não carregado.", "warning");
+        return;
+      }
+      if (!mpInstance || currentMpKey !== mpPublicKey) {
+        mpInstance = new MercadoPago(mpPublicKey, { locale: "pt-BR" });
+        currentMpKey = mpPublicKey;
+      }
+      mpInstance.checkout({
+        preference: { id: preferenceId },
+        autoOpen: true,
+      });
+    }
+
+    function iniciarPollingStatus(preferenceId) {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+      verificarStatus(preferenceId);
+      pollInterval = setInterval(() => verificarStatus(preferenceId), 4000);
+    }
+
+    async function verificarStatus(preferenceId) {
+      try {
+        const resp = await fetch(`/api/previsoes/tematicas/${preferenceId}`);
+        if (!resp.ok) {
+          throw new Error("Não foi possível verificar o status do pagamento.");
+        }
+        const data = await resp.json();
+        if (data.status === "PAID") {
+          if (pollInterval) clearInterval(pollInterval);
+          activePaymentToken = preferenceId;
+          localStorage.setItem("activePaymentToken", preferenceId);
+          setPaymentMessage(`Pagamento aprovado! Acesso válido até ${formatarData(data.expiresAt)}.`, "success");
+          renderThematicResult(data.mensagem || "Mensagem gerada.");
+        } else if (data.status === "EXPIRED") {
+          if (pollInterval) clearInterval(pollInterval);
+          if (activePaymentToken === preferenceId) {
+            localStorage.removeItem("activePaymentToken");
+            activePaymentToken = null;
+          }
+          setPaymentMessage("Token expirado. Solicite uma nova previsão para continuar.", "warning");
+          renderThematicResult("");
+        } else {
+          renderThematicResult("<span class='opacity-70'>Aguardando confirmação do pagamento...</span>");
+        }
+      } catch (err) {
+        console.error(err);
+        setPaymentMessage(err.message || "Erro ao consultar status.", "warning");
+      }
+    }
+
+    function formatarData(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      return d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function renderMainSignGrid() {
@@ -632,6 +875,8 @@
       history.back();
     });
 
+    themeForm.addEventListener("submit", startThematicPrediction);
+
     // Clique no logo → volta para o menu principal
     logoLink.addEventListener("click", (e) => {
       e.preventDefault();
@@ -649,6 +894,12 @@
     });
 
     document.addEventListener("DOMContentLoaded", () => {
+      renderThemeButtons();
+      if (activePaymentToken) {
+        setPaymentMessage("Token de pagamento ativo detectado: você tem 30% de desconto para novas previsões enquanto durar.", "info");
+      } else {
+        setPaymentMessage("Escolha um tema e gere sua previsão personalizada.", "info");
+      }
       renderMainSignGrid();
       renderSignStrip();
 

@@ -3,6 +3,8 @@ package com.logicalastrology.nlp;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalastrology.config.AiProperties;
+import com.logicalastrology.model.PredictionSentiment;
+import com.logicalastrology.model.PredictionTheme;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -198,5 +200,96 @@ public class NlpService {
                 signo.toLowerCase());
 
         return new AiAnalysisResult(resumo, sentimento, coerencia, false, topPalavras);
+    }
+
+    public String generateThematicPrediction(PredictionTheme tema,
+                                             String nomeUsuario,
+                                             String nomePar,
+                                             PredictionSentiment sentimento) {
+        String fallback = fallbackThematic(tema, nomeUsuario, nomePar, sentimento);
+        if (!shouldUseAi()) {
+            return fallback;
+        }
+        try {
+            Thread.sleep(AI_CALL_DELAY.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Chamada à IA interrompida antes de iniciar para previsão temática de {}", nomeUsuario);
+            return fallback;
+        }
+
+        Map<String, Object> body = buildThematicBody(tema, nomeUsuario, nomePar, sentimento);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (StringUtils.hasText(aiProperties.getApiKey())) {
+            headers.setBearerAuth(aiProperties.getApiKey());
+        }
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    aiProperties.getEndpoint(),
+                    HttpMethod.POST,
+                    new HttpEntity<>(body, headers),
+                    JsonNode.class
+            );
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                return fallback;
+            }
+            String message = response.getBody().path("choices").path(0).path("message").path("content").asText(null);
+            if (StringUtils.hasText(message)) {
+                return message.trim();
+            }
+            return fallback;
+        } catch (Exception ex) {
+            log.warn("Falha ao solicitar previsão temática para {}: {}", nomeUsuario, ex.getMessage());
+            return fallback;
+        }
+    }
+
+    private Map<String, Object> buildThematicBody(PredictionTheme tema,
+                                                  String nomeUsuario,
+                                                  String nomePar,
+                                                  PredictionSentiment sentimento) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("model", aiProperties.getModel());
+        payload.put("temperature", 0.65);
+        payload.put("messages", List.of(
+                Map.of("role", "system", "content", "Você é um oráculo motivacional e amigável."),
+                Map.of("role", "user", "content", buildThematicPrompt(tema, nomeUsuario, nomePar, sentimento))
+        ));
+        return payload;
+    }
+
+    private String buildThematicPrompt(PredictionTheme tema,
+                                       String nomeUsuario,
+                                       String nomePar,
+                                       PredictionSentiment sentimento) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("Crie uma previsão astrológica motivadora e direta para o tema '")
+                .append(tema.name().toLowerCase())
+                .append("'. Dados do usuário: nome=")
+                .append(nomeUsuario)
+                .append(", sentimento atual=")
+                .append(sentimento.name().toLowerCase());
+        if (nomePar != null && !nomePar.isBlank()) {
+            prompt.append(", nome do amor=").append(nomePar);
+        }
+        prompt.append(". Use tom acolhedor, pode haver leve criatividade, mas seja prático. Max 3000 palavras. Traga 1 a 2 parágrafos curtos com conselho final acionável.");
+        return prompt.toString();
+    }
+
+    private String fallbackThematic(PredictionTheme tema,
+                                    String nomeUsuario,
+                                    String nomePar,
+                                    PredictionSentiment sentimento) {
+        String base = "%s, aqui vai um conselho rápido sobre %s: mantenha-se %s e foque no que importa.".formatted(
+                nomeUsuario,
+                tema.name().toLowerCase(),
+                sentimento == PredictionSentiment.POSITIVO ? "confiante" : "centrado"
+        );
+        if (tema == PredictionTheme.AMOR && StringUtils.hasText(nomePar)) {
+            return base + " Demonstre carinho por " + nomePar + " e alinhe expectativas com diálogo.";
+        }
+        return base + " Dê um passo concreto hoje e celebre cada pequena vitória.";
     }
 }
