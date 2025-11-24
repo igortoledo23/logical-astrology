@@ -1,26 +1,32 @@
 package com.logicalastrology.payment;
 
 import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.merchantorder.MerchantOrderClient;
+import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
+import com.mercadopago.client.preference.PreferenceClient;
+import com.mercadopago.client.preference.PreferenceItemRequest;
+import com.mercadopago.client.preference.PreferencePayerRequest;
+import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
+import com.mercadopago.net.MPElementsResourcesPage;
+import com.mercadopago.net.MPSearchRequest;
+import com.mercadopago.resources.merchantorder.MerchantOrder;
+import com.mercadopago.resources.merchantorder.MerchantOrderPayment;
+import com.mercadopago.resources.payment.Payment;
+import com.mercadopago.resources.preference.Preference;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +36,9 @@ import java.util.Optional;
 @Component
 public class MercadoPagoClient {
 
-    private static final String API_BASE = "https://api.mercadopago.com";
-    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-
-    private final RestTemplate restTemplate;
-    private final String accessToken;
+    private final PreferenceClient preferenceClient;
+    private final MerchantOrderClient merchantOrderClient;
+    private final PaymentClient paymentClient;
     private final String notificationUrl;
     private final String backUrl;
     private final String publicKey;
@@ -42,150 +46,129 @@ public class MercadoPagoClient {
     public MercadoPagoClient(@Value("${mercadopago.access-token}") String accessToken,
                              @Value("${mercadopago.notification-url:http://localhost:8080/api/pagamentos/webhook}") String notificationUrl,
                              @Value("${mercadopago.back-url:http://localhost:8080/}") String backUrl,
-                             @Value("${mercadopago.public-key}") String publicKey,
-                             RestTemplateBuilder restTemplateBuilder) {
-        this.accessToken = accessToken;
+                             @Value("${mercadopago.public-key}") String publicKey) {
         this.notificationUrl = notificationUrl;
         this.backUrl = backUrl;
         this.publicKey = publicKey;
-        this.restTemplate = restTemplateBuilder
-                .setConnectTimeout(Duration.ofSeconds(15))
-                .setReadTimeout(Duration.ofSeconds(20))
-                .build();
+        MercadoPagoConfig.setAccessToken(accessToken);
+        this.preferenceClient = new PreferenceClient();
+        this.merchantOrderClient = new MerchantOrderClient();
+        this.paymentClient = new PaymentClient();
     }
 
     public PreferenceResponse criarPreferencia(String titulo, BigDecimal valor, LocalDateTime expiraEm) {
-        MercadoPagoConfig.setAccessToken(accessToken);
-        Map<String, Object> body = new HashMap<>();
-        body.put("items", List.of(Map.of(
-                "title", titulo,
-                "quantity", 1,
-                "unit_price", valor,
-                "currency_id", "BRL"
-        )));
-        body.put("payer", Map.of("name", titulo));
-        body.put("back_urls", Map.of(
-                "success", backUrl,
-                "failure", backUrl,
-                "pending", backUrl
-        ));
-        body.put("auto_return", "approved");
-        body.put("notification_url", notificationUrl);
-        body.put("statement_descriptor", "Logical Astrology");
-        body.put("expires", true);
-        ZonedDateTime inicio = ZonedDateTime.now(ZoneOffset.UTC);
-        ZonedDateTime fim = expiraEm.atZone(ZoneOffset.UTC);
-        body.put("expiration_date_from", ISO_FORMATTER.format(inicio));
-        body.put("expiration_date_to", ISO_FORMATTER.format(fim));
+        OffsetDateTime inicio = OffsetDateTime.now(ZoneOffset.UTC);
+        OffsetDateTime fim = expiraEm.atOffset(ZoneOffset.UTC);
 
-        HttpHeaders headers = buildHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        PreferenceRequest request = PreferenceRequest.builder()
+                .items(List.of(PreferenceItemRequest.builder()
+                        .title(titulo)
+                        .quantity(1)
+                        .unitPrice(valor)
+                        .currencyId("BRL")
+                        .build()))
+                .payer(PreferencePayerRequest.builder().name(titulo).build())
+                .backUrls(PreferenceBackUrlsRequest.builder()
+                        .success(backUrl)
+                        .failure(backUrl)
+                        .pending(backUrl)
+                        .build())
+                .autoReturn("approved")
+                .notificationUrl(notificationUrl)
+                .statementDescriptor("Logical Astrology")
+                .expires(true)
+                .expirationDateFrom(inicio)
+                .expirationDateTo(fim)
+                .build();
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    API_BASE + "/checkout/preferences",
-                    HttpMethod.POST,
-                    new HttpEntity<>(body, headers),
-                    Map.class
-            );
-            Map<?, ?> responseBody = response.getBody();
-            if (responseBody == null) {
-                log.warn("Resposta vazia ao criar preferência no Mercado Pago");
+            Preference preference = preferenceClient.create(request);
+            if (preference == null) {
+                log.warn("Preferência retornou nula ao criar pagamento");
                 return null;
             }
             return PreferenceResponse.builder()
-                    .id(asString(responseBody.get("id")))
-                    .initPoint(asString(responseBody.get("init_point")))
-                    .sandboxInitPoint(asString(responseBody.get("sandbox_init_point")))
+                    .id(preference.getId())
+                    .initPoint(preference.getInitPoint())
+                    .sandboxInitPoint(preference.getSandboxInitPoint())
                     .expiresAt(expiraEm)
                     .publicKey(publicKey)
                     .build();
-        } catch (Exception ex) {
+        } catch (MPApiException | MPException ex) {
             log.warn("Erro ao criar preferência no Mercado Pago: {}", ex.getMessage());
             return null;
         }
     }
 
     public boolean pagamentoAprovado(String preferenceId) {
-        HttpHeaders headers = buildHeaders();
+        Map<String, Object> filtros = new HashMap<>();
+        filtros.put("preference_id", preferenceId);
+
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    API_BASE + "/merchant_orders?pref_id=" + preferenceId,
-                    HttpMethod.GET,
-                    new HttpEntity<>(headers),
-                    Map.class
+            MPElementsResourcesPage<MerchantOrder> resultado = merchantOrderClient.search(
+                    MPSearchRequest.builder()
+                            .offset(0)
+                            .limit(10)
+                            .filters(filtros)
+                            .build()
             );
 
-            Map<String, Object> body = response.getBody();
-            if (body == null || body.get("elements") == null) {
-                log.warn("Resposta inesperada ao verificar merchant_order para preferência {}", preferenceId);
+            List<MerchantOrder> ordens = resultado != null ? resultado.getElements() : null;
+            if (ordens == null || ordens.isEmpty()) {
+                log.warn("Nenhuma merchant order encontrada para preferência {}", preferenceId);
                 return false;
             }
 
-            List<?> elements = (List<?>) body.get("elements");
-            if (elements == null || elements.isEmpty()) {
-                return false;
-            }
-
-            for (Object element : elements) {
-                if (!(element instanceof Map<?, ?> map)) {
+            for (MerchantOrder order : ordens) {
+                if (order == null) {
                     continue;
                 }
 
-                String orderStatus = asString(map.get("order_status"));
-                if ("paid".equalsIgnoreCase(orderStatus)) {
+                if ("paid".equalsIgnoreCase(order.getOrderStatus())) {
                     return true;
                 }
 
-                Object paymentsObj = map.get("payments");
-                if (paymentsObj instanceof List<?> payments) {
-                    boolean approved = payments.stream()
-                            .filter(p -> p instanceof Map<?, ?>)
-                            .map(p -> (Map<?, ?>) p)
-                            .anyMatch(p -> "approved".equalsIgnoreCase(asString(p.get("status"))));
-                    if (approved) {
-                        return true;
-                    }
+                List<MerchantOrderPayment> pagamentos = order.getPayments();
+                if (pagamentos == null || pagamentos.isEmpty()) {
+                    continue;
+                }
+
+                boolean aprovado = pagamentos.stream()
+                        .anyMatch(p -> "approved".equalsIgnoreCase(p.getStatus()));
+
+                if (aprovado) {
+                    return true;
                 }
             }
-        } catch (Exception ex) {
+        } catch (MPApiException | MPException ex) {
             log.warn("Falha ao buscar status do pagamento para preferência {}: {}", preferenceId, ex.getMessage());
         }
         return false;
     }
 
     public Optional<String> extrairPreferenceIdDePagamento(String paymentId) {
-        HttpHeaders headers = buildHeaders();
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    API_BASE + "/v1/payments/" + paymentId,
-                    HttpMethod.GET,
-                    new HttpEntity<>(headers),
-                    Map.class
-            );
-            Map<?, ?> body = response.getBody();
-            if (body == null) {
+            long paymentNumericId = Long.parseLong(paymentId);
+            Payment payment = paymentClient.get(paymentNumericId);
+            if (payment == null || payment.getOrder() == null || payment.getOrder().getId() == null) {
                 return Optional.empty();
             }
-            String status = asString(body.get("status"));
-            String preferenceId = asString(body.get("preference_id"));
-            if ("approved".equalsIgnoreCase(status) && preferenceId != null) {
-                return Optional.of(preferenceId);
+
+            MerchantOrder merchantOrder = merchantOrderClient.get(payment.getOrder().getId());
+            if (merchantOrder == null) {
+                return Optional.empty();
             }
-        } catch (Exception ex) {
+
+            String preference = merchantOrder.getPreferenceId();
+            if ("approved".equalsIgnoreCase(payment.getStatus()) && preference != null) {
+                return Optional.of(preference);
+            }
+        } catch (NumberFormatException ex) {
+            log.warn("Identificador de pagamento inválido: {}", paymentId);
+        } catch (MPApiException | MPException ex) {
             log.warn("Não foi possível consultar o pagamento {}: {}", paymentId, ex.getMessage());
         }
         return Optional.empty();
-    }
-
-    private HttpHeaders buildHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        return headers;
-    }
-
-    private String asString(Object value) {
-        return value == null ? null : value.toString();
     }
 
     @Getter
