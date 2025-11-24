@@ -6,12 +6,14 @@ import com.logicalastrology.dto.DataRequest;
 import com.logicalastrology.dto.HoroscopoDTO;
 import com.logicalastrology.service.AnaliseSignoService;
 import com.logicalastrology.service.HoroscopoService;
+import com.logicalastrology.service.ScraperService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,11 +33,14 @@ public class HoroscopoController {
 
     private final HoroscopoService horoscopoService;
     private final AnaliseSignoService analiseSignoService;
+    private final ScraperService scraperService;
 
     public HoroscopoController(HoroscopoService horoscopoService,
-                               AnaliseSignoService analiseSignoService) {
+                               AnaliseSignoService analiseSignoService,
+                               ScraperService scraperService) {
         this.horoscopoService = horoscopoService;
         this.analiseSignoService = analiseSignoService;
+        this.scraperService = scraperService;
     }
 
     @GetMapping("/horoscopos/{sign}")
@@ -74,6 +79,13 @@ public class HoroscopoController {
         LocalDate data = resolveDate(dataRequest);
         LOGGER.info("Endpoint /analise/comparativo/{} chamado para a data {}", sign, data);
         return ResponseEntity.ok(analiseSignoService.obterComparativo(sign, data));
+    }
+
+    @PostMapping("/scrapper")
+    public ResponseEntity<String> executarScrapper() {
+        LOGGER.info("Endpoint /scrapper chamado para executar scraping manual");
+        scraperService.executarScraping();
+        return ResponseEntity.ok("Scraping executado com sucesso");
     }
 
     private LocalDate resolveDate(DataRequest dataRequest) {
