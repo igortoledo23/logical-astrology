@@ -8,7 +8,7 @@ This repository is a project skeleton for **Logical Astrology** backend implemen
 - Jsoup-based sample scraper component
 - Scheduled job skeleton that runs daily
 - REST controllers for fetching horoscopes and analysis
-- AI-ready NLP service that can call OpenAI-compatible endpoints (with graceful fallback)
+- AI-ready NLP service that can call OpenAI-compatible endpoints (with graceful fallb ack)
 - Maven build (pom.xml) and Dockerfile
 
 ## How to build
