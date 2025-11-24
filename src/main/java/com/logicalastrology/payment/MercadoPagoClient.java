@@ -1,5 +1,6 @@
 package com.logicalastrology.payment;
 
+import com.mercadopago.MercadoPagoConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -54,6 +55,7 @@ public class MercadoPagoClient {
     }
 
     public PreferenceResponse criarPreferencia(String titulo, BigDecimal valor, LocalDateTime expiraEm) {
+        MercadoPagoConfig.setAccessToken(accessToken);
         Map<String, Object> body = new HashMap<>();
         body.put("items", List.of(Map.of(
                 "title", titulo,
