@@ -108,23 +108,43 @@ public class MercadoPagoClient {
         HttpHeaders headers = buildHeaders();
         try {
             ResponseEntity<Map> response = restTemplate.exchange(
-                    API_BASE + "/v1/payments/search?preference_id=" + preferenceId + "&sort=date_approved&criteria=desc&limit=1",
+                    API_BASE + "/merchant_orders?pref_id=" + preferenceId,
                     HttpMethod.GET,
                     new HttpEntity<>(headers),
                     Map.class
             );
+
             Map<String, Object> body = response.getBody();
-            if (body == null || body.get("results") == null) {
+            if (body == null || body.get("elements") == null) {
+                log.warn("Resposta inesperada ao verificar merchant_order para preferência {}", preferenceId);
                 return false;
             }
-            List<?> results = (List<?>) body.get("results");
-            if (results.isEmpty()) {
+
+            List<?> elements = (List<?>) body.get("elements");
+            if (elements == null || elements.isEmpty()) {
                 return false;
             }
-            Object first = results.get(0);
-            if (first instanceof Map<?, ?> map) {
-                String status = asString(map.get("status"));
-                return "approved".equalsIgnoreCase(status);
+
+            for (Object element : elements) {
+                if (!(element instanceof Map<?, ?> map)) {
+                    continue;
+                }
+
+                String orderStatus = asString(map.get("order_status"));
+                if ("paid".equalsIgnoreCase(orderStatus)) {
+                    return true;
+                }
+
+                Object paymentsObj = map.get("payments");
+                if (paymentsObj instanceof List<?> payments) {
+                    boolean approved = payments.stream()
+                            .filter(p -> p instanceof Map<?, ?>)
+                            .map(p -> (Map<?, ?>) p)
+                            .anyMatch(p -> "approved".equalsIgnoreCase(asString(p.get("status"))));
+                    if (approved) {
+                        return true;
+                    }
+                }
             }
         } catch (Exception ex) {
             log.warn("Falha ao buscar status do pagamento para preferência {}: {}", preferenceId, ex.getMessage());
