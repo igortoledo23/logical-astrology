@@ -274,7 +274,7 @@ public class NlpService {
         if (nomePar != null && !nomePar.isBlank()) {
             prompt.append(", nome do amor=").append(nomePar);
         }
-        prompt.append(". Use tom acolhedor, pode haver leve criatividade, mas seja prático. Max 3000 palavras. Traga 1 a 2 parágrafos curtos com conselho final acionável.");
+        prompt.append(". Use tom acolhedor, pode haver leve criatividade, mas seja prático. Max 3000 palavras. Traga 1 a 2 parágrafos curtos com conselho final motivador.");
         return prompt.toString();
     }
 

@@ -144,6 +144,7 @@
         .prediction-text {
           font-weight: 400;
           line-height: 1.5;
+          font-style: oblique;
         }
 
         #selected-sign-name {
@@ -155,29 +156,19 @@
           font-weight: 700;
         }
 
-        .theme-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 16px;
-        }
-
-        .theme-btn {
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          color: #e0f2fe;
-        }
-
-        .theme-btn.active {
-          background: rgba(56, 189, 248, 0.15);
-          border-color: rgba(56, 189, 248, 0.9);
-          box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
-        }
-
         .thematic-result {
           min-height: 80px;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(15, 23, 42, 0.65);
+        }
+
+        .thematic-inner {
+          border-radius: 14px;
+        }
+
+        .thematic-title {
+          font-weight: 700;
         }
 
         .source-btn {
@@ -253,6 +244,40 @@
           transform: translateY(-1px);
         }
 
+        /* Título da área de temas - "Descubra seu FUTURO!" */
+        .hero-themes-title {
+          font-size: 1.5rem;
+          font-weight: 800;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #e5e7ff;
+          text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .hero-themes-title span {
+          color: #38bdf8;
+        }
+
+        /* Temas menores na tela inicial */
+        #themes-grid .sign-card {
+          min-height: 90px;
+          padding: 0.6rem 0.4rem;
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+        }
+
+        #themes-grid .sign-icon-big {
+          font-size: 1.9rem;
+        }
+
+        #themes-grid .sign-name-big {
+          font-size: 0.85rem;
+        }
+
+        /* Modo captura: esconde elementos de orientação/inputs/botões */
+        .capture-mode .hide-on-capture {
+          display: none !important;
+        }
+
         @media (min-width: 768px) {
           :root {
             font-size: 20px;
@@ -272,18 +297,18 @@
         }
         @media (max-width: 480px) {
             .logo-mark {
-            width: 35px;
-            height: 35px;
-            font-size: 2rem;
+              width: 35px;
+              height: 35px;
+              font-size: 2rem;
             }
 
             .sign-name-big {
-             font-size: 0.9rem;
+              font-size: 0.9rem;
             }
 
             .logo-text {
-            font-size: 1.3rem;
-            letter-spacing: 0.13em;
+              font-size: 1.3rem;
+              letter-spacing: 0.13em;
             }
        }
     </style>
@@ -292,55 +317,83 @@
 <div class="container py-4 py-md-5">
 
     <!-- HEADER com logo clicável -->
-    <header class="mb-3 mb-md-4 text-center">
+    <header class="mb-3 mb-md-4 text-center hide-on-capture">
         <h1 class="h3 mb-1">
             <a href="/" id="logo-link" class="logo-link">
-          <span class="logo-mark">
-            <span class="logo-symbol">✦</span>
-          </span>
+              <span class="logo-mark">
+                <span class="logo-symbol">✦</span>
+              </span>
                 <span class="logo-text">Logical Astrology</span>
             </a>
         </h1>
-        <p id="header-subtitle" class="mb-0 opacity-70">
+        <p id="header-subtitle" class="mb-3 opacity-70">
             Astrologia fazendo sentido. Uma análise lógica e inteligente das principais fontes de horóscopos.
         </p>
     </header>
 
-    <!-- Previsão temática com pagamento -->
-    <section class="mb-3 mb-md-4">
-      <div class="theme-card p-4 p-md-4">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
-          <div>
-            <h2 class="h6 mb-1">Previsão temática personalizada</h2>
-            <p class="mb-0 opacity-70">Escolha um tema, informe seus dados e libere o conselho motivador após o pagamento seguro.</p>
-          </div>
-          <div class="d-flex flex-wrap gap-2" id="theme-buttons"></div>
+    <!-- GRID DE TEMAS (AMOR, TRABALHO, FAMÍLIA, AMIGOS) -->
+    <section id="themes-grid-view" class="mb-3 mb-md-4">
+        <div class="glass-card p-4 p-md-5">
+            <h2 class="hero-themes-title mb-3 text-center">
+                Descubra seu <span>FUTURO!</span>
+            </h2>
+            <p class="mb-3 text-center opacity-70">
+                Escolha para receber uma previsão exclusiva, planeje seus próximos passos.
+            </p>
+            <div class="row g-3 g-md-4" id="themes-grid">
+                <!-- preenchido via JS -->
+            </div>
         </div>
+    </section>
 
-        <form id="theme-form" class="row g-2 g-md-3 mb-3">
-          <div class="col-12 col-md-4">
-            <label class="form-label small mb-1">Seu nome</label>
-            <input type="text" id="user-name" class="form-control form-control-sm" placeholder="Digite seu nome" required />
-          </div>
-          <div class="col-12 col-md-4" id="love-name-wrapper" style="display: none;">
-            <label class="form-label small mb-1">Nome do amor</label>
-            <input type="text" id="love-name" class="form-control form-control-sm" placeholder="Para tema amor" />
-          </div>
-          <div class="col-12 col-md-4">
-            <label class="form-label small mb-1">Sentimento atual</label>
-            <select id="sentiment" class="form-select form-select-sm">
-              <option value="POSITIVO">Positivo</option>
-              <option value="NEGATIVO">Negativo</option>
-            </select>
-          </div>
-          <div class="col-12 d-flex justify-content-end">
-            <button type="submit" class="btn btn-info btn-sm">Gerar previsão</button>
-          </div>
-        </form>
+    <!-- VIEW DETALHE DO TEMA (FORM + RESULTADO) -->
+    <section id="theme-detail-view" class="mb-3 mb-md-4 view-hidden">
+        <div id="theme-card" class="glass-card p-4 p-md-4 d-flex flex-column gap-3">
+            <!-- Botão de câmera (print) -->
+            <div class="d-flex justify-content-end mb-2 hide-on-capture">
+                <button type="button" id="theme-capture-btn" class="btn btn-outline-light btn-sm">
+                    📸
+                </button>
+            </div>
 
-        <div id="payment-alert" class="small mb-2 opacity-80"></div>
-        <div id="thematic-result" class="thematic-result p-3"></div>
-      </div>
+            <div class="text-center mb-2">
+                <div id="theme-icon" style="font-size: 2.3rem;">❤️</div>
+                <h2 id="theme-title" class="h5 mt-2 mb-1 thematic-title"></h2>
+                <p id="theme-subtitle" class="small mb-0 opacity-70 hide-on-capture">
+                    Preencha os campos e receba uma mensagem única para o seu momento.
+                </p>
+            </div>
+
+            <form id="theme-form" class="row g-2 g-md-3 mb-2 hide-on-capture">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small mb-1">Seu nome</label>
+                    <input type="text" id="user-name" class="form-control form-control-sm" placeholder="Digite seu nome" required />
+                </div>
+                <div class="col-12 col-md-4" id="love-name-wrapper" style="display: none;">
+                    <label class="form-label small mb-1">Nome do amor</label>
+                    <input type="text" id="love-name" class="form-control form-control-sm" placeholder="Para tema amor" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small mb-1">Sentimento atual</label>
+                    <select id="sentiment" class="form-select form-select-sm">
+                        <option value="POSITIVO">Positivo</option>
+                        <option value="NEGATIVO">Negativo</option>
+                    </select>
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" id="theme-submit-btn" class="btn btn-info btn-sm">Gerar previsão</button>
+                </div>
+            </form>
+
+            <div id="payment-alert" class="small mb-2 opacity-80 hide-on-capture"></div>
+            <div id="thematic-result" class="thematic-result p-3"></div>
+
+            <div class="d-flex justify-content-center align-items-center mb-2 hide-on-capture">
+                <button type="button" id="theme-back-button" class="btn btn-outline-light btn-sm btn-back">
+                    ← Voltar ao início
+                </button>
+            </div>
+        </div>
     </section>
 
     <!-- VIEW 1: SELEÇÃO DE SIGNOS -->
@@ -362,56 +415,59 @@
         </div>
 
         <!-- Strip de signos -->
-        <div class="glass-card p-3 mb-3">
+        <div class="glass-card p-3 mb-3 hide-on-capture">
             <div id="sign-strip" class="sign-strip">
                 <!-- preenchido via JS -->
             </div>
         </div>
 
         <!-- Cartão principal: análise + previsões -->
-        <div class="glass-card p-4 p-md-4 d-flex flex-column gap-2">
+        <div id="analysis-card" class="glass-card p-4 p-md-4 d-flex flex-column gap-2">
             <!-- Análise -->
             <div>
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <h3 class="h6 mb-0 analysis-title">Análise lógica do dia</h3>
                     <div class="d-flex align-items-center gap-2">
-              <span id="coherence-chip" class="coherence-pill d-none">
-                <span class="small">Coerência:</span>
-                <span id="coherence-score">0%</span>
-              </span>
-                        <span class="spinner-border spinner-border-sm d-none" id="ai-spinner" role="status"></span>
+                        <button type="button" id="sign-capture-btn" class="btn btn-outline-light btn-sm hide-on-capture">
+                            📸
+                        </button>
+                        <span id="coherence-chip" class="coherence-pill d-none">
+                            <span class="small">Coerência:</span>
+                            <span id="coherence-score">0%</span>
+                        </span>
+                        <span class="spinner-border spinner-border-sm d-none hide-on-capture" id="ai-spinner" role="status"></span>
                     </div>
                 </div>
                 <div id="analysis-box" class="analysis-text mt-2">
-            <span class="opacity-70">
-              Aqui aparecerá o resumo consolidado gerado para o signo selecionado.
-            </span>
+                    <span class="opacity-70">
+                      Aqui aparecerá o resumo consolidado gerado para o signo selecionado.
+                    </span>
                 </div>
             </div>
 
             <!-- O que dizem os principais sites... -->
             <div class="mt-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center justify-content-between mb-2 hide-on-capture">
                     <h3 class="h6 mb-0">O que dizem os principais sites...</h3>
                     <span class="small opacity-70" id="sources-count-label">0 sites</span>
                 </div>
 
                 <!-- Botões das fontes -->
-                <div id="sources-buttons" class="d-flex flex-wrap gap-2 mb-2">
+                <div id="sources-buttons" class="d-flex flex-wrap gap-2 mb-2 hide-on-capture">
                     <!-- preenchido via JS -->
                 </div>
 
                 <!-- Texto da fonte selecionada -->
                 <div id="source-text" class="prediction-text">
-            <span class="opacity-70">
-              Selecione uma das fontes acima para ver o texto.
-            </span>
+                    <span class="opacity-70">
+                      Selecione uma das fontes acima para ver o texto.
+                    </span>
                 </div>
             </div>
         </div>
 
         <!-- Botão voltar -->
-        <div class="mt-3 d-flex justify-content-center">
+        <div class="mt-3 d-flex justify-content-center hide-on-capture">
             <button type="button" id="back-button" class="btn btn-outline-light btn-sm btn-back">
                 ← Voltar
             </button>
@@ -425,6 +481,9 @@
 
 <!-- Mercado Pago -->
 <script src="https://sdk.mercadopago.com/js/v2"></script>
+
+<!-- html2canvas para print bonitão -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <!-- Lógica JS -->
 <script>
@@ -444,10 +503,10 @@
     ];
 
     const THEMES = [
-      { id: "AMOR", label: "Amor" },
-      { id: "TRABALHO", label: "Trabalho" },
-      { id: "FAMILIA", label: "Família" },
-      { id: "AMIGOS", label: "Amigos" },
+      { id: "AMOR", label: "Amor", icon: "❤️" },
+      { id: "TRABALHO", label: "Trabalho", icon: "💼" },
+      { id: "FAMILIA", label: "Família", icon: "👨‍👩‍👧" },
+      { id: "AMIGOS", label: "Amigos", icon: "🤝" },
     ];
 
     const signsView = document.getElementById("signs-view");
@@ -468,7 +527,14 @@
     const headerSubtitle = document.getElementById("header-subtitle");
     const logoLink = document.getElementById("logo-link");
 
-    const themeButtons = document.getElementById("theme-buttons");
+    const themesGridView = document.getElementById("themes-grid-view");
+    const themeDetailView = document.getElementById("theme-detail-view");
+    const themesGrid = document.getElementById("themes-grid");
+    const themeBackButton = document.getElementById("theme-back-button");
+    const themeIconEl = document.getElementById("theme-icon");
+    const themeTitleEl = document.getElementById("theme-title");
+    const themeSubtitleEl = document.getElementById("theme-subtitle");
+
     const themeForm = document.getElementById("theme-form");
     const userNameInput = document.getElementById("user-name");
     const loveNameWrapper = document.getElementById("love-name-wrapper");
@@ -476,6 +542,12 @@
     const sentimentSelect = document.getElementById("sentiment");
     const paymentAlert = document.getElementById("payment-alert");
     const thematicResult = document.getElementById("thematic-result");
+    const themeSubmitBtn = document.getElementById("theme-submit-btn");
+
+    const themeCard = document.getElementById("theme-card");
+    const analysisCard = document.getElementById("analysis-card");
+    const themeCaptureBtn = document.getElementById("theme-capture-btn");
+    const signCaptureBtn = document.getElementById("sign-capture-btn");
 
     let selectedTheme = null;
     let activePaymentToken = localStorage.getItem("activePaymentToken");
@@ -488,6 +560,7 @@
     let currentSignId = null;
     let activeSourceIndex = null;
 
+    /* ==== Helpers de view ==== */
     function applyViewAnimation(el) {
       el.classList.remove("animate-view");
       void el.offsetWidth;
@@ -499,54 +572,155 @@
       if (view === "home") {
         signsView.classList.remove("view-hidden");
         detailsView.classList.add("view-hidden");
+        themeDetailView.classList.add("view-hidden");
+        themesGridView.classList.remove("view-hidden");
         headerSubtitle.style.display = "block";
         applyViewAnimation(signsView);
       } else if (view === "sign") {
         detailsView.classList.remove("view-hidden");
         signsView.classList.add("view-hidden");
+        themesGridView.classList.add("view-hidden");
+        themeDetailView.classList.add("view-hidden");
         headerSubtitle.style.display = "none";
         applyViewAnimation(detailsView);
       }
     }
 
-    function renderThemeButtons() {
-      themeButtons.innerHTML = "";
-      THEMES.forEach(theme => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn btn-outline-info btn-sm theme-btn";
-        btn.textContent = theme.label;
-        btn.dataset.themeId = theme.id;
-        btn.addEventListener("click", () => selectTheme(theme.id));
-        themeButtons.appendChild(btn);
-      });
-      if (!selectedTheme && THEMES.length > 0) {
-        selectTheme(THEMES[0].id);
+    function openThemeView(themeId) {
+      selectedTheme = themeId;
+      const theme = THEMES.find(t => t.id === themeId);
+      if (!theme) return;
+
+      themeIconEl.textContent = theme.icon;
+      themeTitleEl.textContent = `Previsão sobre ${theme.label}`;
+      loveNameWrapper.style.display = themeId === "AMOR" ? "block" : "none";
+
+      const cached = getCachedThemePrediction(themeId);
+      if (cached) {
+        userNameInput.value = cached.userName || "";
+        themeSubmitBtn.disabled = true;
+        themeForm.classList.add("view-hidden");
+        setPaymentMessage(`Você já possui uma previsão ativa até ${formatarData(cached.expiresAt)}.`, "success");
+        renderThematicResult({
+          themeId,
+          userName: cached.userName,
+          message: cached.mensagem,
+          expiresAt: cached.expiresAt
+        });
+      } else {
+        themeSubmitBtn.disabled = false;
+        themeForm.classList.remove("view-hidden");
+        setPaymentMessage("Preencha seus dados para gerar uma previsão personalizada.", "info");
+        renderThematicResult(null);
+      }
+
+      themesGridView.classList.add("view-hidden");
+      signsView.classList.add("view-hidden");
+      detailsView.classList.add("view-hidden");
+      themeDetailView.classList.remove("view-hidden");
+      applyViewAnimation(themeDetailView);
+    }
+
+    function navigateHome(push = true) {
+      currentSignId = null;
+      if (push) {
+        history.pushState({ view: "home" }, "", "/");
+      }
+      setView("home");
+    }
+
+    /* ==== THEME CACHE HELPERS ==== */
+    function isExpired(expiresAt) {
+      if (!expiresAt) return true;
+      const now = new Date();
+      const exp = new Date(expiresAt);
+      return now > exp;
+    }
+
+    function getCachedThemePrediction(themeId) {
+      const raw = localStorage.getItem(`themePrediction_${themeId}`);
+      if (!raw) return null;
+      try {
+        const obj = JSON.parse(raw);
+        if (isExpired(obj.expiresAt)) {
+          localStorage.removeItem(`themePrediction_${themeId}`);
+          return null;
+        }
+        return obj;
+      } catch {
+        return null;
       }
     }
 
-    function selectTheme(themeId) {
-      selectedTheme = themeId;
-      const buttons = themeButtons.querySelectorAll(".theme-btn");
-      buttons.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.themeId === themeId);
-      });
-      loveNameWrapper.style.display = themeId === "AMOR" ? "block" : "none";
+    function cacheThemePrediction({ themeId, userName, message, expiresAt }) {
+      if (!themeId) return;
+      const obj = { themeId, userName, mensagem: message, expiresAt };
+      localStorage.setItem(`themePrediction_${themeId}`, JSON.stringify(obj));
     }
 
+    function clearThemePrediction(themeId) {
+      if (!themeId) return;
+      localStorage.removeItem(`themePrediction_${themeId}`);
+    }
+
+    function storePreferenceMeta(prefId, meta) {
+      if (!prefId) return;
+      localStorage.setItem(`prefMeta_${prefId}`, JSON.stringify(meta));
+    }
+
+    function getPreferenceMeta(prefId) {
+      const raw = localStorage.getItem(`prefMeta_${prefId}`);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function updateThemeStatusFromCache() {
+      THEMES.forEach(theme => {
+        const el = document.getElementById(`theme-status-${theme.id}`);
+        if (!el) return;
+        const cached = getCachedThemePrediction(theme.id);
+        if (cached) {
+          el.textContent = `Ativo até ${formatarData(cached.expiresAt)}`;
+          el.classList.add("opacity-80");
+        } else {
+          el.textContent = "";
+          el.classList.remove("opacity-80");
+        }
+      });
+    }
+
+    /* ==== Mensagens / resultado temático ==== */
     function setPaymentMessage(message, type = "info") {
       const className = type === "success" ? "text-success" : type === "warning" ? "text-warning" : "text-info";
-      paymentAlert.className = `small mb-2 ${className}`;
+      paymentAlert.className = `small mb-2 ${className} hide-on-capture`;
       paymentAlert.textContent = message || "";
     }
 
     function renderThematicResult(content) {
       if (!content) {
-        thematicResult.innerHTML = "<span class='opacity-70'>O resultado aparecerá aqui após a confirmação do pagamento.</span>";
+        thematicResult.innerHTML =
+          "<span class='opacity-70'>O resultado aparecerá aqui após a confirmação do pagamento.</span>";
         return;
       }
-      const safe = escapeHtml(String(content)).replace(/\n/g, "<br>");
-      thematicResult.innerHTML = `<div>${safe}</div>`;
+
+      if (typeof content === "string") {
+        thematicResult.innerHTML = `<span class='opacity-70'>${escapeHtml(content)}</span>`;
+        return;
+      }
+
+      const theme = THEMES.find(t => t.id === content.themeId) || { label: "seu tema" };
+      const userName = content.userName || "Você";
+      const safeMessage = escapeHtml(String(content.message || "")).replace(/\n/g, "<br>");
+
+      thematicResult.innerHTML = `
+        <div class="thematic-inner">
+          <div class="prediction-text">${safeMessage}</div>
+        </div>
+      `;
     }
 
     async function startThematicPrediction(event) {
@@ -555,13 +729,31 @@
         setPaymentMessage("Escolha um tema para continuar.", "warning");
         return;
       }
+
+      const cached = getCachedThemePrediction(selectedTheme);
+      if (cached) {
+        setPaymentMessage(
+          `Você já possui uma previsão ativa para este tema até ${formatarData(cached.expiresAt)}.`,
+          "warning"
+        );
+        renderThematicResult({
+          themeId: selectedTheme,
+          userName: cached.userName,
+          message: cached.mensagem,
+          expiresAt: cached.expiresAt
+        });
+        themeSubmitBtn.disabled = true;
+        themeForm.classList.add("view-hidden");
+        return;
+      }
+
       const nome = userNameInput.value.trim();
       const nomeAmor = loveNameInput.value.trim();
       if (!nome) {
         setPaymentMessage("Informe seu nome para gerar a previsão.", "warning");
         return;
       }
-      setPaymentMessage("Criando pagamento e preparando sua previsão...", "info");
+      setPaymentMessage("Criando pagamento e alinhando sua leitura astrológica...", "info");
       renderThematicResult("");
 
       const payload = {
@@ -584,9 +776,14 @@
         const data = await resp.json();
         currentPreferenceId = data.preferenceId;
         mpPublicKey = data.publicKey;
+        storePreferenceMeta(currentPreferenceId, { themeId: selectedTheme, userName: nome });
+
         const valor = data.valorFinal || data.valorBase;
         const descontoTxt = data.discountApplied ? "(30% de desconto ativo)" : "";
-        setPaymentMessage(`Pagamento criado. Valor: R$ ${valor} ${descontoTxt}. Confirme no checkout para liberar a mensagem.`, "info");
+        setPaymentMessage(
+          `Pagamento criado. Valor: R$ ${valor} ${descontoTxt}. Confirme no checkout para liberar sua mensagem personalizada.`,
+          "info"
+        );
         iniciarCheckout(data.preferenceId);
         iniciarPollingStatus(data.preferenceId);
       } catch (error) {
@@ -629,18 +826,46 @@
           if (pollInterval) clearInterval(pollInterval);
           activePaymentToken = preferenceId;
           localStorage.setItem("activePaymentToken", preferenceId);
-          setPaymentMessage(`Pagamento aprovado! Acesso válido até ${formatarData(data.expiresAt)}.`, "success");
-          renderThematicResult(data.mensagem || "Mensagem gerada.");
+
+          const meta = getPreferenceMeta(preferenceId) || {};
+          const themeId = meta.themeId || selectedTheme;
+          const userName = meta.userName || userNameInput.value.trim() || "Você";
+
+          cacheThemePrediction({
+            themeId,
+            userName,
+            message: data.mensagem || "Mensagem gerada.",
+            expiresAt: data.expiresAt
+          });
+
+          setPaymentMessage(`Pagamento aprovado! Sua previsão ficará disponível até ${formatarData(data.expiresAt)}.`, "success");
+          renderThematicResult({
+            themeId,
+            userName,
+            message: data.mensagem || "Mensagem gerada.",
+            expiresAt: data.expiresAt
+          });
+
+          themeSubmitBtn.disabled = true;
+          themeForm.classList.add("view-hidden");
+          updateThemeStatusFromCache();
         } else if (data.status === "EXPIRED") {
           if (pollInterval) clearInterval(pollInterval);
           if (activePaymentToken === preferenceId) {
             localStorage.removeItem("activePaymentToken");
             activePaymentToken = null;
           }
+          const meta = getPreferenceMeta(preferenceId);
+          if (meta && meta.themeId) {
+            clearThemePrediction(meta.themeId);
+          }
           setPaymentMessage("Token expirado. Solicite uma nova previsão para continuar.", "warning");
           renderThematicResult("");
+          themeSubmitBtn.disabled = false;
+          themeForm.classList.remove("view-hidden");
+          updateThemeStatusFromCache();
         } else {
-          renderThematicResult("<span class='opacity-70'>Aguardando confirmação do pagamento...</span>");
+          renderThematicResult("Aguardando confirmação do pagamento...");
         }
       } catch (err) {
         console.error(err);
@@ -663,6 +888,7 @@
         .replace(/'/g, "&#039;");
     }
 
+    /* ==== GRID DE SIGNOS ==== */
     function renderMainSignGrid() {
       SIGNS.forEach(sign => {
         const col = document.createElement("div");
@@ -718,6 +944,7 @@
       });
     }
 
+    /* ==== HORÓSCOPOS (já existentes) ==== */
     function renderSourceButtonsAndText(lista) {
       sourcesButtons.innerHTML = "";
       activeSourceIndex = null;
@@ -862,15 +1089,42 @@
       loadSignData(signId, { pushHistory: true });
     }
 
-    function navigateHome(push = true) {
-      currentSignId = null;
-      if (push) {
-        history.pushState({ view: "home" }, "", "/");
-      }
-      setView("home");
-    }
+    /* ==== CAPTURA (print screen bonito) ==== */
+    /* ==== CAPTURA (print screen bonito) ==== */
+async function captureCard(cardElement, fileName) {
+  if (!cardElement || typeof html2canvas === "undefined") return;
 
-    // Botão voltar (final da página)
+  // esconde inputs/botões/etc.
+  document.body.classList.add("capture-mode");
+  await new Promise((r) => setTimeout(r, 120));
+
+  try {
+    const canvas = await html2canvas(cardElement, {
+      // mantém o glassmorphism (sem fundo branco “chapado”)
+      backgroundColor: null,
+      useCORS: true,
+      // melhora a nitidez em celulares
+      scale: window.devicePixelRatio > 1 ? 2 : 1,
+    });
+
+    const dataUrl = canvas.toDataURL("image/png");
+
+    // download direto do arquivo
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = fileName || "logical-astrology.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (e) {
+    console.error("Erro ao capturar card:", e);
+  } finally {
+    document.body.classList.remove("capture-mode");
+  }
+}
+
+
+    /* ==== Navegação / eventos globais ==== */
     backButton.addEventListener("click", () => {
       history.back();
     });
@@ -880,6 +1134,10 @@
     // Clique no logo → volta para o menu principal
     logoLink.addEventListener("click", (e) => {
       e.preventDefault();
+      navigateHome(true);
+    });
+
+    themeBackButton.addEventListener("click", () => {
       navigateHome(true);
     });
 
@@ -893,15 +1151,61 @@
       }
     });
 
+    /* ==== GRID DE TEMAS ==== */
+    function renderThemesGrid() {
+      themesGrid.innerHTML = "";
+      THEMES.forEach(theme => {
+        const col = document.createElement("div");
+        col.className = "col-6 col-md-3";
+
+        const card = document.createElement("div");
+        card.className = "sign-card p-3 text-center h-100";
+        card.onclick = () => openThemeView(theme.id);
+
+        const icon = document.createElement("div");
+        icon.className = "sign-icon-big mb-2";
+        icon.textContent = theme.icon;
+
+        const label = document.createElement("div");
+        label.className = "sign-name-big";
+        label.textContent = theme.label;
+
+        const status = document.createElement("div");
+        status.className = "mt-1 small";
+        status.id = `theme-status-${theme.id}`;
+
+        card.appendChild(icon);
+        card.appendChild(label);
+        card.appendChild(status);
+        col.appendChild(card);
+        themesGrid.appendChild(col);
+      });
+      updateThemeStatusFromCache();
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
-      renderThemeButtons();
+      renderThemesGrid();
+
       if (activePaymentToken) {
         setPaymentMessage("Token de pagamento ativo detectado: você tem 30% de desconto para novas previsões enquanto durar.", "info");
       } else {
         setPaymentMessage("Escolha um tema e gere sua previsão personalizada.", "info");
       }
+
       renderMainSignGrid();
       renderSignStrip();
+
+      // handlers dos botões de captura
+      if (themeCaptureBtn) {
+        themeCaptureBtn.addEventListener("click", () => {
+          captureCard(themeCard, `logical-astrology-${selectedTheme || "tema"}.png`);
+        });
+      }
+      if (signCaptureBtn) {
+        signCaptureBtn.addEventListener("click", () => {
+          captureCard(detailsView, `logical-astrology-${currentSignId || "signo"}.png`);
+        });
+      }
 
       const hash = window.location.hash;
       if (hash && hash.startsWith("#")) {

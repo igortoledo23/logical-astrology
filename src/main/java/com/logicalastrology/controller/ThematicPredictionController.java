@@ -37,7 +37,7 @@ public class ThematicPredictionController {
     }
 
     @GetMapping("/previsoes/tematicas/{preferenceId}")
-    public ResponseEntity<ThematicPredictionStatusDTO> status(@PathVariable String preferenceId) {
+    public ResponseEntity<ThematicPredictionStatusDTO> status(@PathVariable("preferenceId") String preferenceId) {
         LOGGER.info("Consultando status da previsão temática {}", preferenceId);
         try {
             return ResponseEntity.ok(predictionService.buscarStatus(preferenceId));

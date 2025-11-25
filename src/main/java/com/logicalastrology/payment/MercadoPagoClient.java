@@ -45,7 +45,7 @@ public class MercadoPagoClient {
 
     public MercadoPagoClient(@Value("${mercadopago.access-token}") String accessToken,
                              @Value("${mercadopago.notification-url:http://localhost:8080/api/pagamentos/webhook}") String notificationUrl,
-                             @Value("${mercadopago.back-url:http://localhost:8080/}") String backUrl,
+                             @Value("${mercadopago.back-url:https://logical-astrology-production.up.railway.app/}") String backUrl,
                              @Value("${mercadopago.public-key}") String publicKey) {
         this.notificationUrl = notificationUrl;
         this.backUrl = backUrl;
@@ -78,7 +78,6 @@ public class MercadoPagoClient {
                 .statementDescriptor("Logical Astrology")
                 .expires(true)
                 .expirationDateFrom(inicio)
-                .expirationDateTo(fim)
                 .build();
 
         try {

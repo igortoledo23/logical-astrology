@@ -46,7 +46,7 @@ public class ThematicPredictionService {
 
         boolean desconto = possuiTokenAtivo(request.getActivePaymentToken());
         BigDecimal valorFinal = calcularValor(desconto);
-        LocalDateTime expiraEm = LocalDateTime.now().plus(VALIDADE_TOKEN);
+        LocalDateTime expiraEm = LocalDateTime.now().plus(Duration.ofMinutes(1440));
 
         ThemedPrediction prediction = new ThemedPrediction();
         prediction.setTema(tema);
