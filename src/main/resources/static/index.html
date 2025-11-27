@@ -67,8 +67,6 @@
           display: flex;
           gap: 0.4rem;
           overflow-x: auto;
-          padding-bottom: 0.3rem;
-          justify-content: center;
         }
 
         .sign-strip-item {
@@ -102,7 +100,7 @@
         }
 
         .coherence-pill {
-          display: inline-flex;
+          display: none;
           align-items: center;
           gap: 0.35rem;
           padding: 0.4rem 0.9rem;
@@ -137,7 +135,8 @@
         }
 
         .analysis-text {
-          font-weight: 400;
+          font-size: 23px;
+          font-weight: 500;
           line-height: 1.5;
         }
 
@@ -153,6 +152,7 @@
         }
 
         .analysis-title {
+          color: cyan;
           font-weight: 700;
         }
 
@@ -244,6 +244,73 @@
           transform: translateY(-1px);
         }
 
+        .sign-header-single {
+          display: flex;
+          justify-content: center;
+        }
+
+        /* base do ícone */
+        .sign-header-item {
+          width: 100px;
+          height: 100px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          background: rgba(15, 23, 42, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2rem;
+          opacity: 0.9;
+        }
+
+        /* visual do “ativo” (igual ao antigo active) */
+        .sign-header-item.active {
+          border-color: rgba(56, 189, 248, 0.9);
+          background: radial-gradient(
+            circle at 30% 20%,
+            rgba(248, 250, 252, 0.98),
+            rgba(56, 189, 248, 0.5) 40%,
+            rgba(15, 23, 42, 1)
+          );
+          box-shadow: 0 0 18px rgba(56, 189, 248, 0.85);
+        }
+
+        .capture-btn {
+          background: none;
+          border: none;
+          outline: none;
+
+          font-size: 1.9rem;           /* tamanho agradável e visível */
+          color: #f8fafc;              /* mesmo tom claro usado no conteúdo */
+          cursor: pointer;
+
+          padding: 0.25rem;
+          line-height: 1;
+
+          transition:
+            transform 0.15s ease,
+            opacity 0.15s ease,
+            filter 0.15s ease;
+        }
+
+        /* leve "flutuação" no hover */
+        .capture-btn:hover {
+          transform: scale(1.15) translateY(-2px);
+          filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.55));
+        }
+
+        /* toque no mobile */
+        .capture-btn:active {
+          transform: scale(0.9);
+          filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.9));
+        }
+
+        .capture-btn:focus {
+          outline: none;
+          box-shadow: none;
+        }
+
+
         /* Título da área de temas - "Descubra seu FUTURO!" */
         .hero-themes-title {
           font-size: 1.5rem;
@@ -317,7 +384,7 @@
 <div class="container py-4 py-md-5">
 
     <!-- HEADER com logo clicável -->
-    <header class="mb-3 mb-md-4 text-center hide-on-capture">
+    <header class="mb-3 mb-md-4 text-center">
         <h1 class="h3 mb-1">
             <a href="/" id="logo-link" class="logo-link">
               <span class="logo-mark">
@@ -351,7 +418,7 @@
         <div id="theme-card" class="glass-card p-4 p-md-4 d-flex flex-column gap-3">
             <!-- Botão de câmera (print) -->
             <div class="d-flex justify-content-end mb-2 hide-on-capture">
-                <button type="button" id="theme-capture-btn" class="btn btn-outline-light btn-sm">
+                <button type="button" id="theme-capture-btn" class="capture-btn hide-on-capture">
                     📸
                 </button>
             </div>
@@ -410,25 +477,20 @@
     <section id="details-view" class="view-hidden">
         <!-- Cabeçalho do signo -->
         <div class="mb-3 text-center">
-            <div id="selected-sign-icon" style="font-size: 2.3rem;">✨</div>
-            <h2 id="selected-sign-name" class="mt-1 mb-0"></h2>
-        </div>
-
-        <!-- Strip de signos -->
-        <div class="glass-card p-3 mb-3 hide-on-capture">
-            <div id="sign-strip" class="sign-strip">
-                <!-- preenchido via JS -->
+            <div class="sign-header-single">
+             <div id="selected-sign-icon" class="sign-header-item active">✨</div>
             </div>
+            <h2 id="selected-sign-name" class="mt-2 mb-0"></h2>
         </div>
 
         <!-- Cartão principal: análise + previsões -->
-        <div id="analysis-card" class="glass-card p-4 p-md-4 d-flex flex-column gap-2">
+        <div id="analysis-card" class="glass-card p-3 p-md-4 d-flex flex-column gap-2">
             <!-- Análise -->
             <div>
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <h3 class="h6 mb-0 analysis-title">Análise lógica do dia</h3>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" id="sign-capture-btn" class="btn btn-outline-light btn-sm hide-on-capture">
+                        <button type="button" id="sign-capture-btn" class="capture-btn hide-on-capture">
                             📸
                         </button>
                         <span id="coherence-chip" class="coherence-pill d-none">
@@ -458,7 +520,7 @@
                 </div>
 
                 <!-- Texto da fonte selecionada -->
-                <div id="source-text" class="prediction-text">
+                <div id="source-text" class="prediction-text hide-on-capture">
                     <span class="opacity-70">
                       Selecione uma das fontes acima para ver o texto.
                     </span>
@@ -512,8 +574,6 @@
     const signsView = document.getElementById("signs-view");
     const detailsView = document.getElementById("details-view");
     const signGridMain = document.getElementById("sign-grid-main");
-    const signStrip = document.getElementById("sign-strip");
-
     const selectedSignIcon = document.getElementById("selected-sign-icon");
     const selectedSignName = document.getElementById("selected-sign-name");
     const analysisBox = document.getElementById("analysis-box");
@@ -913,37 +973,6 @@
       });
     }
 
-    function renderSignStrip() {
-      signStrip.innerHTML = "";
-      SIGNS.forEach(sign => {
-        const item = document.createElement("div");
-        item.className = "sign-strip-item";
-        item.dataset.signId = sign.id;
-        item.onclick = () => navigateToSign(sign.id);
-
-        const icon = document.createElement("div");
-        icon.textContent = sign.icon;
-
-        const label = document.createElement("span");
-        label.textContent = sign.label.substring(0, 3).toUpperCase();
-
-        item.appendChild(icon);
-        item.appendChild(label);
-        signStrip.appendChild(item);
-      });
-    }
-
-    function setActiveStripSign(signId) {
-      const items = signStrip.querySelectorAll(".sign-strip-item");
-      items.forEach(el => {
-        if (el.dataset.signId === signId) {
-          el.classList.add("active");
-        } else {
-          el.classList.remove("active");
-        }
-      });
-    }
-
     /* ==== HORÓSCOPOS (já existentes) ==== */
     function renderSourceButtonsAndText(lista) {
       sourcesButtons.innerHTML = "";
@@ -1032,7 +1061,6 @@
       sourcesButtons.innerHTML = "";
       coherenceChip.classList.add("d-none");
       aiSpinner.classList.remove("d-none");
-      setActiveStripSign(signId);
 
       if (pushHistory) {
         history.pushState({ view: "sign", signId }, "", "#" + signId);
@@ -1193,7 +1221,6 @@ async function captureCard(cardElement, fileName) {
       }
 
       renderMainSignGrid();
-      renderSignStrip();
 
       // handlers dos botões de captura
       if (themeCaptureBtn) {
