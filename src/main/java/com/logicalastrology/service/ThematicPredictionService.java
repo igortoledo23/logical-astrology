@@ -32,6 +32,8 @@ public class ThematicPredictionService {
 
     @Value("${mercadopago.default-payment-value}")
     private BigDecimal VALOR_BASE;
+    @Value("${mercadopago.public-key}")
+    private String PUBLIC_KEY;
     private static final BigDecimal DESCONTO = new BigDecimal("0.30");
     private static final Duration VALIDADE_TOKEN = Duration.ofMinutes(30);
 
@@ -47,9 +49,43 @@ public class ThematicPredictionService {
             throw new IllegalArgumentException("Tema ou sentimento inválido");
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
+        // 🔹 1) Tenta reusar uma previsão pendente vinculada ao activePaymentToken
+        ThemedPrediction predictionReusada = null;
+        String activeToken = request.getActivePaymentToken();
+
+        if (StringUtils.hasText(activeToken)) {
+            predictionReusada = repository.findByPreferenceId(activeToken)
+                    .filter(p -> p.getStatus() == PredictionStatus.PENDING_PAYMENT)
+                    .filter(p -> p.getExpiresAt() == null || p.getExpiresAt().isAfter(now))
+                    .orElse(null);
+        }
+
+
         boolean desconto = possuiTokenAtivo(request.getActivePaymentToken());
         BigDecimal valorFinal = calcularValor(desconto);
-        LocalDateTime expiraEm = LocalDateTime.now().plus(Duration.ofMinutes(1440));
+        LocalDateTime expiraEm = now.plus(Duration.ofMinutes(1440));
+
+        if (predictionReusada != null) {
+            log.info("Reutilizando previsão temática pendente. preferenceId={}",
+                    predictionReusada.getPreferenceId());
+
+            // aqui você pode decidir: usa o valor original ou o recalculado
+            // vou manter o que já estava gravado na previsão (mais consistente)
+            return ThematicPredictionResponse.builder()
+                    .preferenceId(predictionReusada.getPreferenceId())
+                    .predictionId(Optional.ofNullable(predictionReusada.getId()).map(UUID::toString).orElse(null))
+                    .initPoint(predictionReusada.getInitPoint())
+                    .sandboxInitPoint(predictionReusada.getSandboxInitPoint())
+                    .expiresAt(predictionReusada.getExpiresAt())
+                    .discountApplied(predictionReusada.isDescontoAplicado())
+                    .valorBase(predictionReusada.getValorBase())
+                    .valorFinal(predictionReusada.getValorFinal())
+                    .status(predictionReusada.getStatus().name())
+                    .publicKey(PUBLIC_KEY)
+                    .build();
+        }
 
         ThemedPrediction prediction = new ThemedPrediction();
         prediction.setTema(tema);

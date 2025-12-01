@@ -853,6 +853,9 @@
         mpPublicKey = data.publicKey;
         storePreferenceMeta(currentPreferenceId, { themeId: selectedTheme, userName: nome });
 
+        activePaymentToken = data.preferenceId;
+        localStorage.setItem("activePaymentToken", activePaymentToken);
+
         const valor = data.valorFinal || data.valorBase;
         const descontoTxt = data.discountApplied ? "(30% de desconto ativo)" : "";
         setPaymentMessage(
