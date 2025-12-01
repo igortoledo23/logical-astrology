@@ -850,11 +850,12 @@
         }
         const data = await resp.json();
         currentPreferenceId = data.preferenceId;
+        predictionId = data.predictionId
         mpPublicKey = data.publicKey;
-        storePreferenceMeta(currentPreferenceId, { themeId: selectedTheme, userName: nome });
+        storePreferenceMeta(predictionId, { themeId: selectedTheme, userName: nome });
 
-        activePaymentToken = data.preferenceId;
-        localStorage.setItem("activePaymentToken", activePaymentToken);
+        activePaymentToken = currentPreferenceId;
+        localStorage.setItem("activePaymentToken", currentPreferenceId);
 
         const valor = data.valorFinal || data.valorBase;
         const descontoTxt = data.discountApplied ? "(30% de desconto ativo)" : "";
@@ -863,7 +864,7 @@
           "info"
         );
         iniciarCheckout(data.preferenceId);
-        iniciarPollingStatus(data.preferenceId);
+        iniciarPollingStatus(predictionId);
       } catch (error) {
         console.error(error);
         setPaymentMessage(error.message || "Erro ao iniciar a previsão.", "warning");
@@ -885,17 +886,17 @@
       });
     }
 
-    function iniciarPollingStatus(preferenceId) {
+    function iniciarPollingStatus(predictionId) {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
-      verificarStatus(preferenceId);
-      pollInterval = setInterval(() => verificarStatus(preferenceId), 4000);
+      verificarStatus(predictionId);
+      pollInterval = setInterval(() => verificarStatus(predictionId), 4000);
     }
 
-    async function verificarStatus(preferenceId) {
+    async function verificarStatus(predictionId) {
       try {
-        const resp = await fetch(`/api/previsoes/tematicas/${preferenceId}`);
+        const resp = await fetch(`/api/previsoes/tematicas/${predictionId}`);
         if (!resp.ok) {
           throw new Error("Não foi possível verificar o status do pagamento.");
         }

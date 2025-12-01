@@ -92,14 +92,22 @@ public class ThematicPredictionService {
     }
 
     @Transactional
-    public ThematicPredictionStatusDTO buscarStatus(String preferenceId) {
-        ThemedPrediction prediction = repository.findByPreferenceId(preferenceId)
+    public ThematicPredictionStatusDTO buscarStatusPorPredictionId(String predictionId) {
+        UUID id;
+        try {
+            id = UUID.fromString(predictionId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("ID de previsão inválido");
+        }
+
+        ThemedPrediction prediction = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Previsão não encontrada"));
 
-        if (prediction.getStatus() != PredictionStatus.PAID) {
-            if (prediction.getExpiresAt() != null && prediction.getExpiresAt().isBefore(LocalDateTime.now())) {
-                prediction.setStatus(PredictionStatus.EXPIRED);
-            }
+        if (prediction.getStatus() != PredictionStatus.PAID &&
+                prediction.getExpiresAt() != null &&
+                prediction.getExpiresAt().isBefore(LocalDateTime.now())) {
+
+            prediction.setStatus(PredictionStatus.EXPIRED);
         }
 
         return ThematicPredictionStatusDTO.builder()
@@ -108,7 +116,9 @@ public class ThematicPredictionService {
                 .expiresAt(prediction.getExpiresAt())
                 .tema(prediction.getTema().name())
                 .mensagem(prediction.getStatus() == PredictionStatus.PAID ? prediction.getMensagemIa() : null)
-                .ativo(prediction.getStatus() == PredictionStatus.PAID && prediction.getExpiresAt() != null && prediction.getExpiresAt().isAfter(LocalDateTime.now()))
+                .ativo(prediction.getStatus() == PredictionStatus.PAID &&
+                        prediction.getExpiresAt() != null &&
+                        prediction.getExpiresAt().isAfter(LocalDateTime.now()))
                 .build();
     }
 
