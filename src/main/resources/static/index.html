@@ -898,15 +898,23 @@
       try {
         const resp = await fetch(`/api/previsoes/tematicas/${predictionId}`);
         if (!resp.ok) {
-          throw new Error("Não foi possível verificar o status do pagamento.");
+          console.warn("Falha temporária ao verificar status:", resp.status);
+          renderThematicResult("Aguardando confirmação do pagamento...");
+          return;
         }
+
         const data = await resp.json();
+        const preferenceId = data.preferenceId; // vem do backend
+
         if (data.status === "PAID") {
           if (pollInterval) clearInterval(pollInterval);
+
+          // token ativo de pagamento passa a ser esse preferenceId
           activePaymentToken = preferenceId;
           localStorage.setItem("activePaymentToken", preferenceId);
 
-          const meta = getPreferenceMeta(preferenceId) || {};
+          // meta indexada por predictionId (UUID da previsão)
+          const meta = getPreferenceMeta(predictionId) || {};
           const themeId = meta.themeId || selectedTheme;
           const userName = meta.userName || userNameInput.value.trim() || "Você";
 
@@ -917,7 +925,11 @@
             expiresAt: data.expiresAt
           });
 
-          setPaymentMessage(`Pagamento aprovado! Sua previsão ficará disponível até ${formatarData(data.expiresAt)}.`, "success");
+          setPaymentMessage(
+            `Pagamento aprovado! Sua previsão ficará disponível até ${formatarData(data.expiresAt)}.`,
+            "success"
+          );
+
           renderThematicResult({
             themeId,
             userName,
@@ -928,29 +940,43 @@
           themeSubmitBtn.disabled = true;
           themeForm.classList.add("view-hidden");
           updateThemeStatusFromCache();
+
         } else if (data.status === "EXPIRED") {
           if (pollInterval) clearInterval(pollInterval);
+
+          // se o token ativo era esse preferenceId, limpa
           if (activePaymentToken === preferenceId) {
             localStorage.removeItem("activePaymentToken");
             activePaymentToken = null;
           }
-          const meta = getPreferenceMeta(preferenceId);
+
+          const meta = getPreferenceMeta(predictionId);
           if (meta && meta.themeId) {
             clearThemePrediction(meta.themeId);
           }
-          setPaymentMessage("Token expirado. Solicite uma nova previsão para continuar.", "warning");
+
+          setPaymentMessage(
+            "Token expirado. Solicite uma nova previsão para continuar.",
+            "warning"
+          );
+
           renderThematicResult("");
           themeSubmitBtn.disabled = false;
           themeForm.classList.remove("view-hidden");
           updateThemeStatusFromCache();
+
         } else {
-          renderThematicResult("Aguardando confirmação do pagamento...");
+          // ainda aguardando aprovação
+          setPaymentMessage("Aguardando confirmação do pagamento...", "info");
+          // não sobrescreve o conteúdo da previsão aqui
         }
+
       } catch (err) {
         console.error(err);
         setPaymentMessage(err.message || "Erro ao consultar status.", "warning");
       }
     }
+
 
     function formatarData(dateStr) {
       if (!dateStr) return "";
