@@ -99,12 +99,8 @@ public class ThematicPredictionService {
         if (prediction.getStatus() != PredictionStatus.PAID) {
             if (prediction.getExpiresAt() != null && prediction.getExpiresAt().isBefore(LocalDateTime.now())) {
                 prediction.setStatus(PredictionStatus.EXPIRED);
-            } else if (mercadoPagoClient.pagamentoAprovado(preferenceId)) {
-                confirmarPagamento(prediction);
             }
         }
-
-        repository.save(prediction);
 
         return ThematicPredictionStatusDTO.builder()
                 .preferenceId(prediction.getPreferenceId())
@@ -121,13 +117,15 @@ public class ThematicPredictionService {
         mercadoPagoClient.extrairPreferenceIdDePagamento(paymentId)
                 .flatMap(repository::findByPreferenceId)
                 .ifPresent(prediction -> {
+                    if (prediction.getStatus() == PredictionStatus.PAID) {
+                        log.info("Pagamento já processado para preferenceId {}", prediction.getPreferenceId());
+                        return;
+                    }
                     if (prediction.getExpiresAt() != null && prediction.getExpiresAt().isBefore(LocalDateTime.now())) {
                         prediction.setStatus(PredictionStatus.EXPIRED);
-                        repository.save(prediction);
                         return;
                     }
                     confirmarPagamento(prediction);
-                    repository.save(prediction);
                 });
     }
 
