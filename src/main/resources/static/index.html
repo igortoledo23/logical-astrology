@@ -627,6 +627,7 @@
     let selectedTheme = null;
     let activePaymentToken = localStorage.getItem("activePaymentToken");
     let currentPreferenceId = null;
+    let currentPredictionId = null;
     let pollInterval = null;
     let mpPublicKey = null;
     let mpInstance = null;
@@ -777,8 +778,54 @@
 
     function renderThematicResult(content) {
       if (!content) {
-        thematicResult.innerHTML =
-          "<span class='opacity-70'>O resultado aparecerá aqui após a confirmação do pagamento.</span>";
+        // mensagem padrão + botão de contingência
+        thematicResult.innerHTML = `
+          <div class="opacity-70">
+            O resultado aparecerá aqui após a confirmação do pagamento.
+          </div>
+          <button
+            id="force-check-btn"
+            type="button"
+            class="btn btn-link p-0 mt-2"
+            style="
+              background: transparent;
+              border: none;
+              color: inherit;
+              text-decoration: underline;
+              cursor: pointer;
+              font-size: 0.9rem;
+              opacity: 0.7;
+            "
+          >
+            Clique aqui se já tiver efetuado o pagamento
+          </button>
+        `;
+
+        // liga o clique do botão para forçar a consulta pelo predictionId atual
+        const forceBtn = document.getElementById("force-check-btn");
+        if (forceBtn) {
+          forceBtn.addEventListener("click", async () => {
+            try {
+              if (!currentPredictionId) {
+                setPaymentMessage(
+                  "Nenhuma previsão em andamento foi encontrada. Gere uma nova previsão para continuar.",
+                  "warning"
+                );
+                return;
+              }
+
+              setPaymentMessage("Verificando status do pagamento...", "info");
+              await verificarStatus(currentPredictionId);
+            } catch (e) {
+              console.error(e);
+              setPaymentMessage(
+                "Não foi possível verificar o status agora. Tente novamente em alguns segundos.",
+                "warning"
+              );
+            }
+          });
+        }
+
         return;
       }
 
@@ -797,6 +844,7 @@
         </div>
       `;
     }
+
 
     async function startThematicPrediction(event) {
       event.preventDefault();
@@ -850,7 +898,8 @@
         }
         const data = await resp.json();
         currentPreferenceId = data.preferenceId;
-        predictionId = data.predictionId
+        const predictionId = data.predictionId;       // garante escopo local
+        currentPredictionId = predictionId;
         mpPublicKey = data.publicKey;
         storePreferenceMeta(predictionId, { themeId: selectedTheme, userName: nome });
 
