@@ -12,6 +12,7 @@ import com.logicalastrology.repository.ThemedPredictionRepository;
 import com.logicalastrology.nlp.NlpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,7 +29,8 @@ import java.math.RoundingMode;
 @RequiredArgsConstructor
 public class ThematicPredictionService {
 
-    private static final BigDecimal VALOR_BASE = new BigDecimal("05.90");
+    @Value("${mercadopago.default-payment-value}")
+    private BigDecimal VALOR_BASE;
     private static final BigDecimal DESCONTO = new BigDecimal("0.30");
     private static final Duration VALIDADE_TOKEN = Duration.ofMinutes(30);
 
