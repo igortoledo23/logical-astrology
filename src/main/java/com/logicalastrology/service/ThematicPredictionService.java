@@ -28,7 +28,7 @@ import java.math.RoundingMode;
 @RequiredArgsConstructor
 public class ThematicPredictionService {
 
-    private static final BigDecimal VALOR_BASE = new BigDecimal("29.90");
+    private static final BigDecimal VALOR_BASE = new BigDecimal("05.90");
     private static final BigDecimal DESCONTO = new BigDecimal("0.30");
     private static final Duration VALIDADE_TOKEN = Duration.ofMinutes(30);
 
