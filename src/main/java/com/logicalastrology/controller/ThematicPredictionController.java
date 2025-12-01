@@ -37,11 +37,11 @@ public class ThematicPredictionController {
         }
     }
 
-    @GetMapping("/previsoes/tematicas/{preferenceId}")
-    public ResponseEntity<ThematicPredictionStatusDTO> status(@PathVariable("preferenceId") String preferenceId) {
-        LOGGER.info("Consultando status da previsão temática {}", preferenceId);
+    @GetMapping("/previsoes/tematicas/{predictionId}")
+    public ResponseEntity<ThematicPredictionStatusDTO> status(@PathVariable("predictionId") String predictionId) {
+        LOGGER.info("Consultando status da previsão temática {}", predictionId);
         try {
-            return ResponseEntity.ok(predictionService.buscarStatus(preferenceId));
+            return ResponseEntity.ok(predictionService.buscarStatusPorPredictionId(predictionId));
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
         }
