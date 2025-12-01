@@ -115,25 +115,21 @@ public class ThematicPredictionService {
 
     @Transactional
     public void registrarNotificacaoPagamento(String paymentId) {
-        try {
-            mercadoPagoClient.extrairPreferenceIdDePagamento(paymentId)
-                    .flatMap(repository::findByPreferenceId)
-                    .ifPresent(prediction -> {
-                        if (prediction.getStatus() == PredictionStatus.PAID) {
-                            log.info("Pagamento já processado para preferenceId {}", prediction.getPreferenceId());
-                            return;
-                        }
-                        if (prediction.getExpiresAt() != null && prediction.getExpiresAt().isBefore(LocalDateTime.now())) {
-                            prediction.setStatus(PredictionStatus.EXPIRED);
-                            log.info("Pagamento recebido após expiração para preferenceId {}", prediction.getPreferenceId());
-                            return;
-                        }
-                        confirmarPagamento(prediction);
-                        log.info("Pagamento confirmado para preferenceId {}", prediction.getPreferenceId());
-                    });
-        } catch (ObjectOptimisticLockingFailureException e){
-            log.warn("Conflito de versão ao processar pagamento {}. Provavelmente já foi processado em outra requisição. Detalhes: {}",paymentId, e.getMessage());
-        }
+        mercadoPagoClient.extrairPreferenceIdDePagamento(paymentId)
+                .flatMap(repository::findByPreferenceId)
+                .ifPresent(prediction -> {
+                    if (prediction.getStatus() == PredictionStatus.PAID) {
+                        log.info("Pagamento já processado para preferenceId {}", prediction.getPreferenceId());
+                        return;
+                    }
+                    if (prediction.getExpiresAt() != null && prediction.getExpiresAt().isBefore(LocalDateTime.now())) {
+                        prediction.setStatus(PredictionStatus.EXPIRED);
+                        log.info("Pagamento recebido após expiração para preferenceId {}", prediction.getPreferenceId());
+                        return;
+                    }
+                    confirmarPagamento(prediction);
+                    log.info("Pagamento confirmado para preferenceId {}", prediction.getPreferenceId());
+                });
     }
 
     private void confirmarPagamento(ThemedPrediction prediction) {
