@@ -806,7 +806,10 @@
         if (forceBtn) {
           forceBtn.addEventListener("click", async () => {
             try {
-              if (!currentPredictionId) {
+              const pid =
+                currentPredictionId || localStorage.getItem("la_currentPredictionId");
+
+              if (!pid) {
                 setPaymentMessage(
                   "Nenhuma previsão em andamento foi encontrada. Gere uma nova previsão para continuar.",
                   "warning"
@@ -815,7 +818,7 @@
               }
 
               setPaymentMessage("Verificando status do pagamento...", "info");
-              await verificarStatus(currentPredictionId);
+              await verificarStatus(pid);
             } catch (e) {
               console.error(e);
               setPaymentMessage(
@@ -825,7 +828,6 @@
             }
           });
         }
-
         return;
       }
 
@@ -900,6 +902,10 @@
         currentPreferenceId = data.preferenceId;
         const predictionId = data.predictionId;       // garante escopo local
         currentPredictionId = predictionId;
+
+        localStorage.setItem("la_currentPredictionId", predictionId);
+        localStorage.setItem("la_currentPreferenceId", currentPreferenceId);
+
         mpPublicKey = data.publicKey;
         storePreferenceMeta(predictionId, { themeId: selectedTheme, userName: nome });
 
@@ -1307,7 +1313,12 @@ async function captureCard(cardElement, fileName) {
 
     document.addEventListener("DOMContentLoaded", () => {
       renderThemesGrid();
-
+      const savedPredictionId = localStorage.getItem("la_currentPredictionId");
+      if (savedPredictionId) {
+        console.log("[RESTORE] Encontrado predictionId salvo:", savedPredictionId);
+        currentPredictionId = savedPredictionId;
+        iniciarPollingStatus(savedPredictionId);
+      }
       if (activePaymentToken) {
         setPaymentMessage("Token de pagamento ativo detectado: você tem 30% de desconto para novas previsões enquanto durar.", "info");
       } else {
