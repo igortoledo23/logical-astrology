@@ -5,7 +5,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <title>Logical Astrology</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Bootstrap 5 -->
     <link
@@ -932,41 +932,13 @@
         return;
       }
       if (!mpInstance || currentMpKey !== mpPublicKey) {
-        mpInstance = new MercadoPago(mpPublicKey, { locale: "pt-BR", integrationMode: "modal" });
+        mpInstance = new MercadoPago(mpPublicKey, { locale: "pt-BR" });
         currentMpKey = mpPublicKey;
       }
-      const checkout = mpInstance.checkout({
-          preference: { id: preferenceId },
-          render: {
-            container: "#wallet_container", // pode ser invisível
-            label: "Pagar"
-          },
-          callbacks: {
-            onReady: () => {
-              console.log("Checkout pronto");
-            },
-            onSubmit: () => {
-              console.log("Pagamento iniciado...");
-            },
-            onPaymentApproved: (data) => {
-              console.log("Pagamento aprovado!", data);
-
-              // Fecha o popup imediatamente (desktop e mobile)
-              if (mpInstance && mpInstance.close) {
-                mpInstance.close();
-              }
-
-              // Força check e renderização da previsão
-              if (currentPredictionId) {
-                verificarStatus(currentPredictionId);
-              }
-            },
-            onError: (err) => {
-              console.error("Erro no checkout:", err);
-            }
-          }
-        });
-        checkout.open();
+      mpInstance.checkout({
+        preference: { id: preferenceId },
+        autoOpen: true,
+      });
     }
 
     function iniciarPollingStatus(predictionId) {
